@@ -12,6 +12,7 @@ import type { Position } from "../../domain/disc";
 import { DiscCurveEditor } from "./DiscCurveEditor";
 import { DiscMarker } from "./DiscMarker";
 import { EntityMarker } from "./EntityMarker";
+import { GhostFrame } from "./GhostFrame";
 import { TrajectoryArrows } from "./TrajectoryArrows";
 import { TrashZone } from "./TrashZone";
 
@@ -50,11 +51,12 @@ interface FieldProps {
   nextFrame?: Frame;
   /** Édition de la trajectoire courbe du disque (Phase 6), sur la frame en cours d'édition. */
   discCurveEditor?: DiscCurveEditing;
+  /** Frame précédente affichée en fantôme discret pendant l'édition (voir GhostFrame.tsx). */
+  ghostFrame?: Frame;
 }
 
-// Proportions des marqueurs relatives à la largeur *en jeu* du terrain (pas à
-// la largeur totale du Stage, qui inclut la marge sideline éventuelle) — axe
-// le plus contraignant en portrait mobile, valeurs ajustées visuellement.
+// Proportions des marqueurs relatives à la largeur du Stage — axe le plus
+// contraignant en portrait mobile, valeurs ajustées visuellement.
 const ENTITY_RADIUS_RATIO = 0.038;
 const DISC_RADIUS_RATIO = 0.022;
 const LINE_WIDTH = 2;
@@ -66,7 +68,14 @@ const LINE_WIDTH = 2;
  * Gère la marge sideline (`FieldConfig.sidelineMarginMeters`) : la plage rendue
  * sur l'axe largeur peut dépasser [0,100], voir docs/DATA_MODEL.md.
  */
-export function Field({ fieldConfig, frame, interactive, nextFrame, discCurveEditor }: FieldProps) {
+export function Field({
+  fieldConfig,
+  frame,
+  interactive,
+  nextFrame,
+  discCurveEditor,
+  ghostFrame,
+}: FieldProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);
   const [dragState, setDragState] = useState<{ entityId: string; isOverTrash: boolean } | null>(
@@ -85,18 +94,20 @@ export function Field({ fieldConfig, frame, interactive, nextFrame, discCurveEdi
     return () => observer.disconnect();
   }, []);
 
+  // La plage visible fait toujours exactement 100 points de pourcentage (voir
+  // computeVisibleXRangePercent) : la marge sideline décale la fenêtre plutôt
+  // que de l'élargir, donc `width` représente déjà "100% de terrain" que la
+  // marge soit active ou non — ni le terrain ni les entités ne rétrécissent.
   const range = computeVisibleXRangePercent(fieldConfig);
   const rangeSpanPercent = range.max - range.min;
-  // Largeur du terrain "en jeu" (hors marge sideline), en px.
-  const fieldWidthPx = width * (100 / rangeSpanPercent);
-  const height = fieldWidthPx * (fieldConfig.lengthMeters / fieldConfig.widthMeters);
+  const height = width * (fieldConfig.lengthMeters / fieldConfig.widthMeters);
   const colors = resolveFieldColors(fieldConfig.colors);
   const toX = (percent: number) => ((percent - range.min) / rangeSpanPercent) * width;
   const toY = (percent: number) => (percent / 100) * height;
   const fromX = (px: number) => range.min + (px / width) * rangeSpanPercent;
   const fromY = (py: number) => (py / height) * 100;
-  const entityRadius = fieldWidthPx * ENTITY_RADIUS_RATIO;
-  const discRadius = fieldWidthPx * DISC_RADIUS_RATIO;
+  const entityRadius = width * ENTITY_RADIUS_RATIO;
+  const discRadius = width * DISC_RADIUS_RATIO;
   const fieldLeft = toX(0);
   const fieldRight = toX(100);
 
@@ -158,6 +169,16 @@ export function Field({ fieldConfig, frame, interactive, nextFrame, discCurveEdi
               stroke={colors.lines}
               strokeWidth={LINE_WIDTH}
             />
+
+            {ghostFrame && (
+              <GhostFrame
+                frame={ghostFrame}
+                toX={toX}
+                toY={toY}
+                entityRadius={entityRadius}
+                discRadius={discRadius}
+              />
+            )}
 
             {frame.entities.map((entity) => (
               <EntityMarker

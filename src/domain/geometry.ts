@@ -38,11 +38,18 @@ export interface VisibleRange {
  * Plage visible sur l'axe largeur, incluant la marge sideline éventuelle
  * (voir docs/DATA_MODEL.md, section "Marge sideline"). `{ min: 0, max: 100 }`
  * quand `sidelineMarginMeters` est absent/0 — comportement inchangé par défaut.
+ *
+ * Une seule sideline visible (celle du côté x=100), pas les deux : plutôt que
+ * d'étendre la plage symétriquement (ce qui rétrécirait tout à l'écran pour
+ * tenir dans la même largeur de conteneur), l'étendue reste toujours de 100
+ * points de pourcentage — juste décalée. La marge "coûte" donc une tranche
+ * équivalente prise sur le bord opposé du terrain (x proche de 0, hors-champ),
+ * pas une réduction de la taille des entités/du terrain affiché.
  */
 export function computeVisibleXRangePercent(fieldConfig: FieldConfig): VisibleRange {
   if (!fieldConfig.sidelineMarginMeters) {
     return { min: 0, max: 100 };
   }
   const marginPercent = (fieldConfig.sidelineMarginMeters / fieldConfig.widthMeters) * 100;
-  return { min: -marginPercent, max: 100 + marginPercent };
+  return { min: marginPercent, max: 100 + marginPercent };
 }

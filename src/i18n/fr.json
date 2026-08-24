@@ -27,7 +27,8 @@
       "freeDisc": "Libérer le disque",
       "remove": "Supprimer",
       "deselect": "Désélectionner",
-      "selectionHint": "Astuce : sélectionnez un joueur puis tapez sur le terrain pour le déplacer, en plus du glisser-déposer."
+      "selectionHint": "Astuce : sélectionnez un joueur puis tapez sur le terrain pour le déplacer, en plus du glisser-déposer.",
+      "ghostFrameToggle": "Afficher la frame précédente en fantôme"
     },
     "frames": {
       "title": "Frames",

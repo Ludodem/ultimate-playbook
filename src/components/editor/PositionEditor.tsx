@@ -14,6 +14,7 @@ export function PositionEditor() {
   const { t } = useTranslation();
   const [viewMode, setViewMode] = useState<ViewMode>("edit");
   const [draftMidpoint, setDraftMidpoint] = useState<Position | null>(null);
+  const [showGhostFrame, setShowGhostFrame] = useState(true);
   const fieldConfig = useActionEditorStore((s) => s.fieldConfig);
   const frames = useActionEditorStore((s) => s.frames);
   const currentFrameId = useActionEditorStore((s) => s.currentFrameId);
@@ -87,6 +88,7 @@ export function PositionEditor() {
             <Field
               fieldConfig={fieldConfig}
               frame={frame}
+              ghostFrame={showGhostFrame ? (previousFrame ?? undefined) : undefined}
               interactive={{
                 selectedEntityId,
                 onEntitySelect: selectEntity,
@@ -117,6 +119,16 @@ export function PositionEditor() {
           </div>
 
           <p className="hint">{t("editor.toolbar.selectionHint")}</p>
+          {previousFrame && (
+            <label className="checkbox-option ghost-toggle">
+              <input
+                type="checkbox"
+                checked={showGhostFrame}
+                onChange={(e) => setShowGhostFrame(e.target.checked)}
+              />
+              {t("editor.toolbar.ghostFrameToggle")}
+            </label>
+          )}
           {discMoved && (
             <p className="hint">
               {t("editor.curve.hint")}

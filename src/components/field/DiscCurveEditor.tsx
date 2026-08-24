@@ -2,10 +2,11 @@ import type Konva from "konva";
 import { Circle, Line } from "react-konva";
 import type { Position } from "../../domain/disc";
 import { controlPointForMidpoint, sampleQuadraticBezier } from "../../domain/interpolation";
-import { DISC_ARROW_COLOR, DISC_FILL_COLOR, DISC_STROKE_COLOR } from "./theme";
+import { DISC_ARROW_COLOR } from "./theme";
 
 interface DiscCurveEditorProps {
-  /** Position résolue du disque sur la frame précédente (le "fantôme"). */
+  /** Position résolue du disque sur la frame précédente (départ de la courbe ; le
+   * disque "fantôme" à cette position est déjà affiché par `GhostFrame`, pas ici). */
   fromPosition: Position;
   /** Position résolue du disque sur la frame courante. */
   toPosition: Position;
@@ -80,16 +81,6 @@ export function DiscCurveEditor({
         stroke={DISC_ARROW_COLOR}
         strokeWidth={2}
         dash={[6, 4]}
-        listening={false}
-      />
-      <Circle
-        x={toX(fromPosition.x)}
-        y={toY(fromPosition.y)}
-        radius={radius}
-        fill={DISC_FILL_COLOR}
-        stroke={DISC_STROKE_COLOR}
-        strokeWidth={1.5}
-        opacity={0.45}
         listening={false}
       />
       <Circle

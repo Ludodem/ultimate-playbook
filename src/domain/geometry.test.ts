@@ -48,8 +48,15 @@ describe("computeVisibleXRangePercent", () => {
     });
   });
 
-  it("extends symmetrically by the margin expressed as a % of widthMeters", () => {
+  it("shifts by the margin (one sideline only) rather than extending symmetrically", () => {
     const withMargin = { ...half, sidelineMarginMeters: 3.6 }; // 20% of widthMeters (18)
-    expect(computeVisibleXRangePercent(withMargin)).toEqual({ min: -20, max: 120 });
+    expect(computeVisibleXRangePercent(withMargin)).toEqual({ min: 20, max: 120 });
+  });
+
+  it("always spans exactly 100 percentage points, with or without margin", () => {
+    expect(computeVisibleXRangePercent(half).max - computeVisibleXRangePercent(half).min).toBe(100);
+    const withMargin = { ...half, sidelineMarginMeters: 5 };
+    const range = computeVisibleXRangePercent(withMargin);
+    expect(range.max - range.min).toBe(100);
   });
 });

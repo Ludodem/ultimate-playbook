@@ -19,7 +19,7 @@ interface FieldConfig {
   lengthMeters: number; // longueur totale du terrain représenté
   widthMeters: number; // largeur du terrain
   endzoneMeters?: number; // profondeur de l'en-but, absent si type === "undefined"
-  /** Marge hors-ligne à réserver de chaque côté (sidelines), en mètres. 0/absent = aucune (défaut) — voir "Marge sideline" ci-dessous. */
+  /** Marge hors-ligne à réserver côté x=100 (une seule sideline visible), en mètres. 0/absent = aucune (défaut) — voir "Marge sideline" ci-dessous. */
   sidelineMarginMeters?: number;
   colors?: FieldColors; // absent = valeurs par défaut (voir ci-dessous)
 }
@@ -48,10 +48,11 @@ Ces valeurs sont le **défaut appliqué quand `colors` est absent** d'un `FieldC
 
 ### Marge sideline
 
-Certains plays ont besoin qu'une entité ou le disque sorte visiblement du terrain (ex. un around qui contourne la marque par l'extérieur de la ligne de touche, un "long de ligne"). Plutôt qu'un système de coordonnées séparé, on autorise `x` à sortir de `[0,100]` (toujours dans la même unité : % de `widthMeters`), et `sidelineMarginMeters` indique à l'affichage combien d'espace hors-ligne réserver visuellement de chaque côté.
+Certains plays ont besoin qu'une entité ou le disque sorte visiblement du terrain (ex. un around qui contourne la marque par l'extérieur de la ligne de touche, un "long de ligne"). Plutôt qu'un système de coordonnées séparé, on autorise `x` à sortir de `[0,100]` (toujours dans la même unité : % de `widthMeters`), et `sidelineMarginMeters` indique à l'affichage combien d'espace hors-ligne réserver visuellement, côté x=100.
 
 - **Défaut `0`** : aucun changement pour les actions qui n'en ont pas besoin — la vue reste cadrée pile sur le terrain, sans perte d'espace ni de lisibilité.
-- Plage visible en % (utilisée par le rendu, voir `docs/ARCHITECTURE.md` §3) : `[-marginPercent, 100 + marginPercent]`, avec `marginPercent = (sidelineMarginMeters / widthMeters) * 100`.
+- **Une seule sideline visible** (celle du côté x=100), pas les deux : un play "longue ligne" ne concerne qu'un seul bord du terrain, donc réserver de la place des deux côtés serait du gâchis. Plage visible (voir `docs/ARCHITECTURE.md` §3) : `[marginPercent, 100 + marginPercent]`, avec `marginPercent = (sidelineMarginMeters / widthMeters) * 100` — toujours 100 points de pourcentage d'étendue, juste décalée plutôt qu'élargie.
+- **La taille des entités/du terrain affiché ne change jamais** avec ce réglage : plutôt que de tout rétrécir pour faire tenir marge + terrain dans la même largeur de conteneur (ce qui était le comportement d'une première version, jugée inutilement radicale), la marge "coûte" une tranche équivalente sacrifiée sur le bord opposé du terrain (x proche de 0, qui sort du cadre visible). Cohérent avec l'usage visé : un play dessiné volontairement près d'une sideline n'a pas besoin de voir tout le reste de la largeur du terrain.
 - Un seul système de coordonnées, toujours ancré sur le terrain réel : `x=0`/`x=100` ne changent jamais de sens selon que la marge est activée ou non — un export JSON reste donc non-ambigu indépendamment du réglage d'affichage.
 - Limité à l'axe largeur (sidelines) pour le MVP ; pas de marge équivalente sur l'axe longueur (au-delà d'un en-but ou de sa propre ligne de fond).
 - Cette même plage visible s'applique au point de contrôle d'une trajectoire courbe (§8) : activer la marge sideline donne aussi de la place pour "bend" une passe plus fort, sans mécanisme séparé.
