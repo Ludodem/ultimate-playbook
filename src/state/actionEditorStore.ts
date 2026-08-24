@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { resolveDiscPosition } from "../domain/disc";
-import type { Disc, Entity, FieldConfig, Frame, Team } from "../domain/models";
+import type { CurveControlPoint, Disc, Entity, FieldConfig, Frame, Team } from "../domain/models";
 import { findFreeSpawnPosition } from "../domain/spawn";
 import { getChildren, getSubtreeIds } from "../domain/tree";
 
@@ -39,6 +39,9 @@ interface ActionEditorState {
   /** Détache le disque de son porteur, en le figeant à sa position actuelle. */
   freeDisc: () => void;
   setNote: (note: string) => void;
+  /** Définit (ou, avec `null`, réinitialise) le point de contrôle de la courbe
+   * du disque arrivant sur la frame courante — voir docs/DATA_MODEL.md §8. */
+  setDiscCurveControlPoint: (point: CurveControlPoint | null) => void;
   /** Duplique la frame courante comme continuation simple ; no-op si elle a déjà un enfant. */
   addNextFrame: () => void;
   /** Crée une nouvelle branche depuis la frame courante ; labellise rétroactivement
@@ -208,6 +211,20 @@ export const useActionEditorStore = create<ActionEditorState>((set, get) => ({
     }),
 
   setNote: (note) => set((state) => updateCurrentFrame(state, (frame) => ({ ...frame, note }))),
+
+  setDiscCurveControlPoint: (point) =>
+    set((state) =>
+      updateCurrentFrame(state, (frame) => {
+        const nextCurves = { ...frame.incomingCurves };
+        if (point) {
+          nextCurves.disc = point;
+        } else {
+          delete nextCurves.disc;
+        }
+        const hasCurves = Object.keys(nextCurves).length > 0;
+        return { ...frame, incomingCurves: hasCurves ? nextCurves : undefined };
+      }),
+    ),
 
   addNextFrame: () =>
     set((state) => {

@@ -45,6 +45,10 @@
     "viewMode": {
       "edit": "Éditer",
       "play": "Jouer"
+    },
+    "curve": {
+      "hint": "Le disque a changé de position : glissez le point doré sur le terrain pour courber sa trajectoire (blade, hammer...).",
+      "reset": "Trajectoire rectiligne"
     }
   },
   "playback": {

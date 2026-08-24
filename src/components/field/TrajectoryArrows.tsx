@@ -1,5 +1,6 @@
 import { Arrow } from "react-konva";
 import { resolveDiscPosition } from "../../domain/disc";
+import { sampleQuadraticBezier } from "../../domain/interpolation";
 import type { Frame } from "../../domain/models";
 import { DISC_ARROW_COLOR, PLAYER_ARROW_COLOR } from "./theme";
 
@@ -38,13 +39,26 @@ export function TrajectoryArrows({ frame, nextFrame, toX, toY }: TrajectoryArrow
   const discFrom = resolveDiscPosition(frame.disc, frame.entities);
   const discTo = resolveDiscPosition(nextFrame.disc, nextFrame.entities);
   const showDiscArrow = discFrom && discTo && (discFrom.x !== discTo.x || discFrom.y !== discTo.y);
+  const discControlPoint = nextFrame.incomingCurves?.disc;
+
+  // Trajectoire réelle (voir docs/DATA_MODEL.md §8) : courbe si un point de
+  // contrôle est défini pour ce segment, sinon ligne droite (2 points).
+  const discPoints =
+    discFrom && discTo
+      ? discControlPoint
+        ? sampleQuadraticBezier(discFrom, discControlPoint, discTo, 24).flatMap((p) => [
+            toX(p.x),
+            toY(p.y),
+          ])
+        : [toX(discFrom.x), toY(discFrom.y), toX(discTo.x), toY(discTo.y)]
+      : [];
 
   return (
     <>
       {playerArrows}
-      {showDiscArrow && discFrom && discTo && (
+      {showDiscArrow && (
         <Arrow
-          points={[toX(discFrom.x), toY(discFrom.y), toX(discTo.x), toY(discTo.y)]}
+          points={discPoints}
           stroke={DISC_ARROW_COLOR}
           fill={DISC_ARROW_COLOR}
           strokeWidth={2}

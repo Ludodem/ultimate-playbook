@@ -200,6 +200,28 @@ describe("actionEditorStore", () => {
     });
   });
 
+  describe("setDiscCurveControlPoint", () => {
+    it("stores a control point for the disc on the current frame", () => {
+      useActionEditorStore.getState().addEntity("offense");
+      const id = currentFrame().entities[0].id;
+      useActionEditorStore.getState().assignDiscTo(id);
+      useActionEditorStore.getState().addNextFrame();
+
+      useActionEditorStore.getState().setDiscCurveControlPoint({ x: 70, y: 20 });
+
+      expect(currentFrame().incomingCurves).toEqual({ disc: { x: 70, y: 20 } });
+    });
+
+    it("clears the disc entry (and incomingCurves entirely) when passed null", () => {
+      useActionEditorStore.getState().addNextFrame();
+      useActionEditorStore.getState().setDiscCurveControlPoint({ x: 70, y: 20 });
+
+      useActionEditorStore.getState().setDiscCurveControlPoint(null);
+
+      expect(currentFrame().incomingCurves).toBeUndefined();
+    });
+  });
+
   describe("undo / redo", () => {
     it("restores both the frame tree and the previously viewed frame", () => {
       const rootId = useActionEditorStore.getState().currentFrameId!;

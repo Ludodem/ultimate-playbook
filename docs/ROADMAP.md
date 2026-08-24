@@ -62,12 +62,14 @@ Convention : cocher une case au fur et à mesure de l'avancement. Si une tâche 
 
 Fait partie du périmètre MVP (voir `docs/PRD.md` §4.5) mais s'implémente comme une couche indépendante par-dessus la Phase 5 : le MVP reste pleinement fonctionnel (en ligne droite) sans cette phase, elle peut donc être livrée séparément/plus tard sans bloquer le reste.
 
-- [ ] Étendre le modèle `Frame` avec `incomingCurves` (voir `docs/DATA_MODEL.md` §8).
-- [ ] Fonctions pures `lerp` et `quadraticBezier` dans `src/domain/interpolation.ts` + tests unitaires, et bascule de `interpolate` entre les deux selon la présence d'une entrée `incomingCurves` pour l'entité/le disque concerné.
-- [ ] UI d'édition : affichage du disque "fantôme" de la frame précédente relié par une ligne pointillée à sa position sur la frame courante, avec une poignée de contrôle draggable au milieu (identique à l'interaction de déplacement d'une entité).
-- [ ] L'affordance de courbure n'apparaît que si la position du disque change réellement entre les deux frames.
-- [ ] Bouton de réinitialisation ("trajectoire rectiligne") qui supprime l'entrée `incomingCurves.disc`.
-- [ ] Mise à jour du rendu des flèches de trajectoire (mode lecture) pour dessiner la courbe réelle (Bézier) plutôt qu'une ligne droite quand un point de contrôle est défini.
+- [x] Étendre le modèle `Frame` avec `incomingCurves` (voir `docs/DATA_MODEL.md` §8) — déjà présent dans `src/domain/models.ts` depuis la conception initiale.
+- [x] Fonctions pures `lerp`/`quadraticBezier`/`sampleQuadraticBezier` dans `src/domain/interpolation.ts` + tests unitaires, et bascule de `buildInterpolatedFrame` entre les deux selon la présence d'une entrée `incomingCurves` pour l'entité/le disque concerné (générique — seul le disque a une UI au MVP).
+- [x] UI d'édition : disque "fantôme" (semi-transparent) à sa position sur la frame précédente, courbe pointillée jusqu'à sa position actuelle, poignée de contrôle draggable — `DiscCurveEditor.tsx`, intégré à `Field` via la nouvelle prop `discCurveEditor`.
+- [x] L'affordance de courbure n'apparaît que si la position du disque change réellement entre les deux frames — calculé dans `PositionEditor.tsx` (`discMoved`).
+- [x] Bouton de réinitialisation ("trajectoire rectiligne") qui supprime l'entrée `incomingCurves.disc` — `setDiscCurveControlPoint(null)`, affiché seulement quand une courbe est effectivement stockée.
+- [x] Mise à jour du rendu des flèches de trajectoire (mode lecture) pour dessiner la courbe réelle (Bézier) plutôt qu'une ligne droite quand un point de contrôle est défini — `TrajectoryArrows.tsx`.
+- Note d'implémentation : le point de contrôle par défaut (avant tout drag) est le milieu du segment, ce qui produit mathématiquement une ligne droite identique au `lerp` — donc rien à activer/désactiver explicitement, l'affordance apparaît et se comporte "en ligne droite" tant qu'on ne fait pas glisser la poignée.
+- Correctif post-retour utilisateur : la poignée ne fait pas glisser le point de contrôle brut de la bézier (qui doit être placé **deux fois plus loin** que l'effet visuel recherché, donc sort vite de l'écran et devient invisible) mais le **sommet réel de la courbe** (`curveMidpoint`, à t=0.5), avec le point de contrôle correspondant calculé à la volée (`controlPointForMidpoint`, inverse exact). Le sommet est borné à la zone visible du terrain (`dragBoundFunc` Konva, pas de rebond post-rendu) — la poignée ne disparaît plus, sans perdre d'amplitude de courbure atteignable.
 
 ## Phase 7 — Persistance locale
 

@@ -8,10 +8,22 @@ import {
 } from "../../domain/geometry";
 import type { FieldConfig, Frame } from "../../domain/models";
 import { resolveFieldColors } from "../../domain/presets/fieldColors";
+import type { Position } from "../../domain/disc";
+import { DiscCurveEditor } from "./DiscCurveEditor";
 import { DiscMarker } from "./DiscMarker";
 import { EntityMarker } from "./EntityMarker";
 import { TrajectoryArrows } from "./TrajectoryArrows";
 import { TrashZone } from "./TrashZone";
+
+/** Édition de la courbe du disque (Phase 6, `docs/ROADMAP.md`). */
+export interface DiscCurveEditing {
+  fromPosition: Position;
+  toPosition: Position;
+  /** Sommet réel de la courbe (t=0.5), pas le point de contrôle abstrait — voir DiscCurveEditor.tsx. */
+  midpoint: Position;
+  onDragMove: (midpoint: Position) => void;
+  onDragEnd: (midpoint: Position) => void;
+}
 
 /**
  * Callbacks d'édition (Phase 3, `docs/ROADMAP.md`). Absent = rendu statique
@@ -36,6 +48,8 @@ interface FieldProps {
   /** Frame suivante (mode lecture pas à pas, Phase 5) : si fournie, affiche les
    * flèches de trajectoire vers celle-ci. Sans effet en mode édition. */
   nextFrame?: Frame;
+  /** Édition de la trajectoire courbe du disque (Phase 6), sur la frame en cours d'édition. */
+  discCurveEditor?: DiscCurveEditing;
 }
 
 // Proportions des marqueurs relatives à la largeur *en jeu* du terrain (pas à
@@ -52,7 +66,7 @@ const LINE_WIDTH = 2;
  * Gère la marge sideline (`FieldConfig.sidelineMarginMeters`) : la plage rendue
  * sur l'axe largeur peut dépasser [0,100], voir docs/DATA_MODEL.md.
  */
-export function Field({ fieldConfig, frame, interactive, nextFrame }: FieldProps) {
+export function Field({ fieldConfig, frame, interactive, nextFrame, discCurveEditor }: FieldProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);
   const [dragState, setDragState] = useState<{ entityId: string; isOverTrash: boolean } | null>(
@@ -205,6 +219,19 @@ export function Field({ fieldConfig, frame, interactive, nextFrame }: FieldProps
 
             {nextFrame && (
               <TrajectoryArrows frame={frame} nextFrame={nextFrame} toX={toX} toY={toY} />
+            )}
+
+            {discCurveEditor && (
+              <DiscCurveEditor
+                {...discCurveEditor}
+                toX={toX}
+                toY={toY}
+                fromX={fromX}
+                fromY={fromY}
+                minX={range.min}
+                maxX={range.max}
+                radius={discRadius * 1.3}
+              />
             )}
           </Layer>
         </Stage>

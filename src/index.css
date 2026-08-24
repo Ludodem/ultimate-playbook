@@ -82,6 +82,13 @@ button {
   margin: 0.5rem 0;
 }
 
+.curve-reset {
+  margin-left: 0.5rem;
+  min-height: unset;
+  padding: 0.15rem 0.5rem;
+  font-size: 0.8rem;
+}
+
 .warning {
   color: #b45309;
   font-size: 0.85rem;
