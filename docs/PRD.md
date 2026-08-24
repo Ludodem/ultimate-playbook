@@ -38,6 +38,8 @@ Les dimensions doivent avoir des valeurs par défaut adaptées à l'**indoor** m
 
 Couleurs par défaut : terrain en **gris** (neutre, façon sol de gymnase, ne concurrence pas visuellement les joueurs), en-but en **bleu**. Valeurs exactes et rationale dans `docs/DATA_MODEL.md` (section couleurs). Pas d'UI de personnalisation au MVP, mais le modèle de données est conçu pour rendre ça configurable sans migration future.
 
+**Marge sideline** (optionnelle, désactivée par défaut) : pour les plays où le disque ou un joueur doit visiblement sortir du terrain (ex. un around qui contourne la marque par l'extérieur), possibilité de réserver une marge hors-ligne dans la vue plutôt que de rester cadré pile sur le terrain. Voir `docs/DATA_MODEL.md` (section "Marge sideline") pour le détail.
+
 ### 4.2 Configuration de l'effectif
 
 - Preset par défaut : **5v5** (5 attaquants / 5 défenseurs).

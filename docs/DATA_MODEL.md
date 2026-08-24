@@ -1,6 +1,6 @@
 # Modèle de données — Ultimate Playbook
 
-Toutes les coordonnées sont exprimées en **pourcentage (0–100) de la largeur/longueur du terrain**, jamais en pixels, pour un rendu responsive indépendant de la taille d'écran.
+Toutes les coordonnées sont exprimées en **pourcentage de la largeur/longueur du terrain**, jamais en pixels, pour un rendu responsive indépendant de la taille d'écran. `0` et `100` désignent toujours les lignes de touche/de fond réelles du terrain — une position sur l'axe largeur (`x`) peut néanmoins sortir de `[0,100]` pour représenter un déplacement hors-ligne (sideline), voir §1 "Marge sideline".
 
 ## 1. Terrain (`FieldConfig`)
 
@@ -11,6 +11,7 @@ interface FieldColors {
   field: string; // couleur de la zone de jeu hors en-but (hex)
   endzone: string; // couleur de l'en-but, ignorée si type === "undefined"
   lines: string; // couleur des lignes de délimitation
+  outOfBounds: string; // couleur de la marge sideline, visible seulement si sidelineMarginMeters > 0
 }
 
 interface FieldConfig {
@@ -18,6 +19,8 @@ interface FieldConfig {
   lengthMeters: number; // longueur totale du terrain représenté
   widthMeters: number; // largeur du terrain
   endzoneMeters?: number; // profondeur de l'en-but, absent si type === "undefined"
+  /** Marge hors-ligne à réserver de chaque côté (sidelines), en mètres. 0/absent = aucune (défaut) — voir "Marge sideline" ci-dessous. */
+  sidelineMarginMeters?: number;
   colors?: FieldColors; // absent = valeurs par défaut (voir ci-dessous)
 }
 ```
@@ -34,13 +37,24 @@ Valeurs par défaut suggérées (indoor, modifiables par l'utilisateur) :
 
 ### Couleurs par défaut
 
-| Élément | Couleur                        | Justification                                                                                                  |
-| ------- | ------------------------------ | -------------------------------------------------------------------------------------------------------------- |
-| Terrain | `#D9DBDE` (gris clair)         | Évoque un sol de gymnase indoor, neutre : ne fait pas concurrence visuelle aux pastilles colorées des joueurs. |
-| En-but  | `#3D6FB4` (bleu)               | Convention courante en indoor (zones colorées), bon contraste avec le gris du terrain.                         |
-| Lignes  | `#4B4F58` (gris ardoise foncé) | Lisible à la fois sur le gris clair et sur le bleu de l'en-but.                                                |
+| Élément    | Couleur                        | Justification                                                                                                  |
+| ---------- | ------------------------------ | -------------------------------------------------------------------------------------------------------------- |
+| Terrain    | `#D9DBDE` (gris clair)         | Évoque un sol de gymnase indoor, neutre : ne fait pas concurrence visuelle aux pastilles colorées des joueurs. |
+| En-but     | `#3D6FB4` (bleu)               | Convention courante en indoor (zones colorées), bon contraste avec le gris du terrain.                         |
+| Lignes     | `#4B4F58` (gris ardoise foncé) | Lisible à la fois sur le gris clair et sur le bleu de l'en-but.                                                |
+| Hors-ligne | `#BFC2C7` (gris plus soutenu)  | Distinct du gris du terrain sans être criard ; signale "vous êtes sorti" sans détourner l'attention.           |
 
 Ces valeurs sont le **défaut appliqué quand `colors` est absent** d'un `FieldConfig` — jamais codées en dur dans les composants de rendu. Aucune UI de personnalisation n'est prévue pour le MVP (voir `docs/ROADMAP.md`, post-MVP), mais le modèle de données la supporte dès maintenant : changer les couleurs d'une action ne nécessite aucune migration de schéma.
+
+### Marge sideline
+
+Certains plays ont besoin qu'une entité ou le disque sorte visiblement du terrain (ex. un around qui contourne la marque par l'extérieur de la ligne de touche, un "long de ligne"). Plutôt qu'un système de coordonnées séparé, on autorise `x` à sortir de `[0,100]` (toujours dans la même unité : % de `widthMeters`), et `sidelineMarginMeters` indique à l'affichage combien d'espace hors-ligne réserver visuellement de chaque côté.
+
+- **Défaut `0`** : aucun changement pour les actions qui n'en ont pas besoin — la vue reste cadrée pile sur le terrain, sans perte d'espace ni de lisibilité.
+- Plage visible en % (utilisée par le rendu, voir `docs/ARCHITECTURE.md` §3) : `[-marginPercent, 100 + marginPercent]`, avec `marginPercent = (sidelineMarginMeters / widthMeters) * 100`.
+- Un seul système de coordonnées, toujours ancré sur le terrain réel : `x=0`/`x=100` ne changent jamais de sens selon que la marge est activée ou non — un export JSON reste donc non-ambigu indépendamment du réglage d'affichage.
+- Limité à l'axe largeur (sidelines) pour le MVP ; pas de marge équivalente sur l'axe longueur (au-delà d'un en-but ou de sa propre ligne de fond).
+- Cette même plage visible s'applique au point de contrôle d'une trajectoire courbe (§8) : activer la marge sideline donne aussi de la place pour "bend" une passe plus fort, sans mécanisme séparé.
 
 ## 2. Entités (`Entity`)
 
@@ -51,7 +65,7 @@ interface Entity {
   id: string; // uuid stable sur toute l'action (une entité = un joueur qui persiste frame après frame)
   team: Team;
   label: string; // ex: "1", "H1", "D3" — libre
-  x: number; // 0-100, position sur la largeur
+  x: number; // % de la largeur ; peut sortir de [0,100] pour une position hors-ligne (sideline), voir §1
   y: number; // 0-100, position sur la longueur
   hasDisc?: boolean; // au plus une entité à true par frame
 }
@@ -68,7 +82,7 @@ Règles :
 ```ts
 interface Disc {
   heldBy?: string; // id d'une Entity, si le disque est en main
-  x?: number; // position libre si heldBy est absent (0-100)
+  x?: number; // position libre si heldBy est absent ; peut sortir de [0,100], voir §1 "Marge sideline"
   y?: number;
 }
 
@@ -144,7 +158,7 @@ Par défaut, un segment (transition entre deux frames consécutives) est interpo
 
 ```ts
 interface CurveControlPoint {
-  x: number; // 0-100, coordonnées relatives comme toutes les positions du modèle
+  x: number; // coordonnées relatives comme toutes les positions du modèle ; peut sortir de [0,100] (voir §1 "Marge sideline")
   y: number;
 }
 
@@ -154,6 +168,7 @@ type IncomingCurves = Record<string /* id d'entité, ou "disc" */, CurveControlP
 - Absence d'entrée pour une clé donnée = interpolation en ligne droite (comportement inchangé).
 - **MVP** : seule la clé `"disc"` est exposée dans l'UI d'édition (voir `docs/PRD.md` §4.5). Le mécanisme pour les entités/joueurs existe dans le modèle mais reste sans UI tant que ce n'est pas priorisé.
 - L'affordance d'édition ne doit être proposée que lorsque la position du disque diffère réellement entre la frame N et la frame N+1 (sinon rien à courber).
+- Le point de contrôle n'est jamais borné dans le modèle, mais sa plage réellement "draggable" dans l'éditeur est celle rendue à l'écran (`[0,100]` par défaut, étendue par `sidelineMarginMeters` si activé — voir §1). Une bézier quadratique tire la courbe vers son point de contrôle sans jamais l'atteindre : pour un bend visuellement modeste hors-ligne, le point de contrôle doit souvent être placé plus loin que l'effet recherché, d'où l'intérêt de la marge sideline pour l'édition, pas seulement pour les positions finales.
 
 ### Impact sur l'interpolation
 

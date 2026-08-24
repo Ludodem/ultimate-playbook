@@ -17,18 +17,19 @@ Convention : cocher une case au fur et à mesure de l'avancement. Si une tâche 
 ## Phase 1 — Modèle de données & presets
 
 - [x] Implémenter les types TS de `docs/DATA_MODEL.md` (`FieldConfig`, `FieldColors`, `Entity`, `Frame`, `Disc`, `Action`) — `src/domain/models.ts`. _(Note : `Frame` a depuis été remodélisé en arbre — `parentId`/`siblingOrder`/`branchLabel` remplacent `order`, voir `docs/DATA_MODEL.md` §9 et journal de décisions `docs/ARCHITECTURE.md` §8. Correctif rétroactif prévu en tête de Phase 4.)_
-- [x] Implémenter les presets de terrain (`half`, `full`, `undefined`) avec valeurs par défaut indoor + `DEFAULT_FIELD_COLORS` (gris terrain / bleu en-but / gris ardoise pour les lignes) et une fonction `resolveFieldColors` (fallback si `colors` absent) — `src/domain/presets/field.ts` et `fieldColors.ts`.
+- [x] Implémenter les presets de terrain (`half`, `full`, `undefined`) avec valeurs par défaut indoor + `DEFAULT_FIELD_COLORS` (gris terrain / bleu en-but / gris ardoise pour les lignes) et une fonction `resolveFieldColors` (fallback si `colors` absent) — `src/domain/presets/field.ts` et `fieldColors.ts`. _(Étendu depuis pour la marge sideline : `sidelineMarginMeters` sur `FieldConfig` + couleur `outOfBounds`, voir `docs/DATA_MODEL.md`, section "Marge sideline".)_
 - [x] Implémenter les presets d'effectif : `empty`, `5v5-vertical-stack`, `5v5-horizontal-stack` — `src/domain/presets/roster.ts`.
 - [x] Tests unitaires sur les presets (nombre d'entités générées, cohérence des positions dans [0,100]).
 
 ## Phase 2 — Rendu statique du terrain
 
-- [x] Composant `Field` (Konva Stage/Layer) qui dessine le terrain selon `FieldConfig` (lignes, en-buts si applicable), responsive (resize observer) — `src/components/field/Field.tsx`.
+- [x] Composant `Field` (Konva Stage/Layer) qui dessine le terrain selon `FieldConfig` (lignes, en-buts si applicable), responsive (resize observer) — `src/components/field/Field.tsx`. _(Étendu depuis pour gérer la marge sideline : `toX` mappe la plage `computeVisibleXRangePercent(fieldConfig)`, pas systématiquement `[0,100]`.)_
 - [x] Rendu des entités (cercles colorés par équipe, label) et du disque depuis une `Frame` statique passée en props — `EntityMarker.tsx` / `DiscMarker.tsx`.
 - [x] Validation manuelle : affiché un preset 5v5 stack vertical sur PC (1280px) et mobile étroit (390px) via Playwright — capture d'écran conforme (gris/bleu, orange/violet, disque bien distinct, aucun chevauchement). Ajustements apportés suite à cette validation : espacement des presets d'effectif (`roster.ts`) et décalage visuel du disque quand il est en main (pour ne pas masquer le label du porteur).
 
 ## Phase 3 — Édition des positions
 
+- [ ] Écran/panneau de démarrage d'une nouvelle action : choix du preset terrain (`half`/`full`/`undefined`, toggle marge sideline) et du preset d'effectif (`empty`/`5v5-vertical-stack`/`5v5-horizontal-stack`).
 - [ ] Drag & drop d'une entité (souris + tactile via pointer events), mise à jour du store.
 - [ ] Ajout / suppression d'une entité (choix de l'équipe), sans limite basse, avertissement au-delà du seuil haut recommandé.
 - [ ] Sélection du porteur du disque (assignation `heldBy`) ou position libre du disque.
