@@ -74,7 +74,9 @@ interface Disc {
 
 interface Frame {
   id: string;
-  order: number; // position dans la séquence (0-based)
+  parentId: string | null; // frame précédente dans l'arbre ; null uniquement pour LA frame racine — voir §9
+  siblingOrder: number; // position parmi les frames partageant le même parentId (ordre des branches à un embranchement)
+  branchLabel?: string; // nom court de cette branche (ex. "Autour", "Strike") ; obligatoire si le parent a plus d'un enfant — voir §9
   note?: string; // annotation libre affichée pendant l'édition et la lecture
   transitionMs?: number; // durée de l'interpolation DEPUIS la frame précédente en mode "fluide" (défaut si absent : valeur globale de l'action)
   entities: Entity[];
@@ -93,7 +95,7 @@ interface Action {
   tags: string[]; // libre, ex: ["stack vertical", "iso"] — utilisé par la future bibliothèque
   fieldConfig: FieldConfig;
   defaultTransitionMs: number; // durée par défaut d'une transition en mode fluide (ex: 1200)
-  frames: Frame[]; // toujours >= 1
+  frames: Frame[]; // arbre à plat (voir §9) ; toujours >= 1 ; exactement une frame avec parentId === null
   createdAt: string; // ISO 8601
   updatedAt: string;
 }
@@ -161,3 +163,25 @@ En mode "fluide", pour chaque segment et chaque entité/disque :
 - entrée présente → `quadraticBezier(P0, controlPoint, P1, t)` à la place du `lerp`, uniquement pour cette entité/le disque sur ce segment (voir `docs/ARCHITECTURE.md` §4).
 
 Le mode "pas à pas" n'est pas concerné : il n'affiche que les positions aux frames, jamais l'intérieur d'un segment.
+
+## 9. Branches (arbre de frames)
+
+Une action n'est pas toujours une simple séquence : un play peut comporter un point de décision avec plusieurs continuations possibles (ex. une sortie de ligne où le porteur choisit entre un around sur son soutien ou une passe dans la course d'un strike). `frames` est donc modélisé comme un **arbre**, pas une liste ordonnée : chaque frame connaît sa frame précédente (`parentId`), et une frame peut avoir plusieurs enfants (un embranchement).
+
+### Principe
+
+- **Racine** : l'unique frame avec `parentId === null`. Pas de champ `rootFrameId` séparé sur `Action` — pour éviter une source de vérité dupliquée à garder synchronisée, la racine se déduit en scannant `frames`.
+- **Continuation simple** : un parent avec un seul enfant — comportement par défaut, équivalent à une liste ordonnée classique. `branchLabel` est alors sans objet sur cet enfant.
+- **Embranchement** : un parent avec plusieurs enfants — chaque enfant DOIT porter un `branchLabel` (ex. "Autour", "Strike"), affiché comme onglet dans l'éditeur et comme choix en mode lecture pas à pas.
+- `siblingOrder` ordonne les enfants entre eux (ordre d'affichage des branches à un embranchement ; sans effet particulier hors embranchement).
+
+### Non-objectif explicite : pas de fusion de branches
+
+Le modèle reste un **arbre pur** (chaque frame a exactement un parent), jamais un graphe. Deux branches ne peuvent pas reconverger vers une frame partagée : si la fin d'un play est commune à plusieurs options, elle est dupliquée dans chaque branche plutôt que reliée. Un peu plus d'édition en échange d'un modèle mental et d'une UI de lecture beaucoup plus simples (pas d'ambiguïté sur "d'où vient-on" en arrivant sur une frame).
+
+### Impact sur la lecture (Play)
+
+- **Pas à pas** : arrivé sur une frame à plusieurs enfants, "suivant" devient un choix entre les `branchLabel` disponibles plutôt qu'un bouton unique.
+- **Fluide** : le choix se fait **avant** de lancer la lecture (sélection d'un chemin complet racine → feuille, résolu embranchement par embranchement), pour ne jamais interrompre une animation en cours.
+
+Logique pure associée : voir `docs/ARCHITECTURE.md` §7.

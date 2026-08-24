@@ -2,7 +2,7 @@
 
 Ce document découpe le MVP (voir `docs/PRD.md`) en phases séquentielles, chacune en tâches actionnables par un agent (ou un humain) une par une. Chaque tâche cochée doit correspondre à un commit (ou une PR) cohérent.
 
-Convention : cocher une case au fur et à mesure de l'avancement. Si une tâche impose un écart par rapport à `docs/ARCHITECTURE.md` ou `docs/DATA_MODEL.md`, documenter la décision dans le journal de décisions (`docs/ARCHITECTURE.md` §7) avant de continuer.
+Convention : cocher une case au fur et à mesure de l'avancement. Si une tâche impose un écart par rapport à `docs/ARCHITECTURE.md` ou `docs/DATA_MODEL.md`, documenter la décision dans le journal de décisions (`docs/ARCHITECTURE.md` §8) avant de continuer.
 
 ## Phase 0 — Bootstrap technique
 
@@ -16,7 +16,7 @@ Convention : cocher une case au fur et à mesure de l'avancement. Si une tâche 
 
 ## Phase 1 — Modèle de données & presets
 
-- [x] Implémenter les types TS de `docs/DATA_MODEL.md` (`FieldConfig`, `FieldColors`, `Entity`, `Frame`, `Disc`, `Action`) — `src/domain/models.ts`.
+- [x] Implémenter les types TS de `docs/DATA_MODEL.md` (`FieldConfig`, `FieldColors`, `Entity`, `Frame`, `Disc`, `Action`) — `src/domain/models.ts`. _(Note : `Frame` a depuis été remodélisé en arbre — `parentId`/`siblingOrder`/`branchLabel` remplacent `order`, voir `docs/DATA_MODEL.md` §9 et journal de décisions `docs/ARCHITECTURE.md` §8. Correctif rétroactif prévu en tête de Phase 4.)_
 - [x] Implémenter les presets de terrain (`half`, `full`, `undefined`) avec valeurs par défaut indoor + `DEFAULT_FIELD_COLORS` (gris terrain / bleu en-but / gris ardoise pour les lignes) et une fonction `resolveFieldColors` (fallback si `colors` absent) — `src/domain/presets/field.ts` et `fieldColors.ts`.
 - [x] Implémenter les presets d'effectif : `empty`, `5v5-vertical-stack`, `5v5-horizontal-stack` — `src/domain/presets/roster.ts`.
 - [x] Tests unitaires sur les presets (nombre d'entités générées, cohérence des positions dans [0,100]).
@@ -35,18 +35,21 @@ Convention : cocher une case au fur et à mesure de l'avancement. Si une tâche 
 - [ ] Undo/redo sur les actions d'édition (pile d'historique des frames).
 - [ ] Mode d'interaction alternatif pour petits écrans (sélectionner puis taper la destination, en plus du drag classique).
 
-## Phase 4 — Gestion des frames (timeline)
+## Phase 4 — Gestion des frames & branches (timeline)
 
-- [ ] Bande de vignettes représentant les frames de l'action courante.
-- [ ] Créer une nouvelle frame par duplication de la frame courante.
-- [ ] Réordonner / dupliquer / supprimer une frame.
+- [ ] Correctif rétroactif : migrer `Frame`/`Action` du modèle `order`-based vers l'arbre (`parentId`/`siblingOrder`/`branchLabel`, voir `docs/DATA_MODEL.md` §9) dans `src/domain/models.ts`, et mettre à jour la démo de la Phase 2 (`App.tsx`) en conséquence.
+- [ ] `src/domain/tree.ts` : fonctions pures `getChildren`, `getRootFrame`, `isForkFrame`, `resolvePath` + tests unitaires (voir `docs/ARCHITECTURE.md` §7).
+- [ ] Bande de vignettes représentant les frames de l'action courante ; se scinde en pistes parallèles à partir d'un embranchement, chaque piste étiquetée par son `branchLabel`.
+- [ ] Créer une nouvelle frame par duplication de la frame courante (continuation simple, un seul enfant).
+- [ ] Créer une branche à partir de n'importe quelle frame ("ajouter une option depuis cette frame") : demande un `branchLabel` pour la nouvelle branche, et labellise rétroactivement l'enfant existant si le parent n'en avait qu'un jusque-là.
+- [ ] Réordonner / dupliquer / supprimer une frame (au sein d'une branche).
 - [ ] Annotation texte libre par frame.
 
 ## Phase 5 — Mode lecture (Play)
 
 - [ ] Fonction pure d'interpolation entre deux frames (`src/domain/interpolation.ts`) + tests unitaires.
-- [ ] Mode "pas à pas" : navigation précédent/suivant.
-- [ ] Mode "fluide" : lecture animée avec `requestAnimationFrame`, vitesse réglable.
+- [ ] Mode "pas à pas" : navigation précédent/suivant ; à un embranchement, choix inline entre les `branchLabel` disponibles au lieu d'un bouton "suivant" unique.
+- [ ] Mode "fluide" : lecture animée avec `requestAnimationFrame`, vitesse réglable ; s'il y a des branches, sélection d'un chemin complet (via `resolvePath`) avant de lancer la lecture.
 - [ ] Affichage des flèches de trajectoire entre deux frames consécutives (distinction course de joueur / passe de disque).
 
 ## Phase 6 — Trajectoire courbe du disque
@@ -86,3 +89,4 @@ Fait partie du périmètre MVP (voir `docs/PRD.md` §4.5) mais s'implémente com
 - Trajectoires courbes pour les **déplacements de joueurs** (le mécanisme `incomingCurves` est déjà générique, cf. `docs/DATA_MODEL.md` §8 — seule l'UI d'édition pour les joueurs reste à faire ; la trajectoire courbe du disque est en Phase 6, dans le MVP).
 - Personnalisation des couleurs du terrain via l'UI (le modèle de données le permet déjà par défaut, cf. `FieldConfig.colors`).
 - PWA (installable, utilisable hors-ligne) — pertinent tôt vu l'usage "bord de terrain", à réévaluer en priorité juste après le MVP plutôt qu'en fin de liste.
+- Réutilisation d'une branche/d'une fin de play entre plusieurs actions (référence cross-actions plutôt que duplication) — explicitement écarté du MVP, voir `docs/DATA_MODEL.md` §9.

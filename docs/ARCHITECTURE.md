@@ -70,7 +70,15 @@ ultimate-playbook/
 - GitHub Actions : build Vite (`base: '/ultimate-playbook/'`) sur push sur `main`, déploiement via `actions/deploy-pages` (ou `peaceiris/actions-gh-pages`).
 - Le `base` path et toute config d'hébergement vivent uniquement dans `vite.config.ts` / le workflow CI — jamais codés en dur ailleurs dans l'app (voir principe d'agnosticisme d'hébergement ci-dessus).
 
-## 7. Journal de décisions
+## 7. Arborescence de frames (branches)
+
+Voir `docs/DATA_MODEL.md` §9 pour le modèle de données (un arbre, pas une liste). Côté code :
+
+- `src/domain/tree.ts` (pur, testé, indépendant de React/Konva) : `getChildren(frames, parentId)`, `getRootFrame(frames)`, `isForkFrame(frames, frameId)` (plus d'un enfant), `resolvePath(frames, choices)` — suit l'arbre depuis la racine en résolvant chaque embranchement via une map `{ frameId d'embranchement → id de l'enfant choisi }`.
+- Éditeur (Phase 4) : deux actions distinctes dans l'UI — "frame suivante" (continuation simple, crée un unique enfant) vs "ajouter une option depuis cette frame" (crée un second enfant, `branchLabel` obligatoire ; si le parent n'avait qu'un seul enfant jusque-là, celui-ci doit être labellisé rétroactivement au moment où le fork est créé, puisqu'un parent à plusieurs enfants exige un `branchLabel` sur chacun). La timeline se scinde visuellement en pistes parallèles à partir d'un embranchement (façon graphe de commits), chaque piste étiquetée par son `branchLabel`, plutôt qu'une simple bande linéaire — composant sensiblement plus complexe qu'un filmstrip.
+- Lecture (Phase 5) : pas à pas → choix inline entre les `branchLabel` disponibles à un embranchement (au lieu d'un bouton "suivant" unique) ; fluide → sélection d'un chemin complet via `resolvePath` avant de lancer l'animation, jamais d'interruption en cours de lecture.
+
+## 8. Journal de décisions
 
 À compléter au fil du projet (format court : date, décision, raison). Sert de mémoire pour les agents qui reprennent le projet plus tard.
 
@@ -79,3 +87,4 @@ ultimate-playbook/
 - **2026-08-24** — Pas de backend au MVP : persistance locale + export/import JSON, pour rester déployable en statique pur (GitHub Pages) et utilisable hors-ligne.
 - **2026-08-24** — Trajectoire courbe du disque intégrée au périmètre MVP (déplacée depuis le hors-scope), modélisée par un point de contrôle de Bézier quadratique par segment plutôt qu'une cubique ou un dessin libre : la contrainte "facile à éditer" prime, et un seul point réutilise l'interaction de drag déjà présente sur les entités. Structure générique (`incomingCurves`, cf. `docs/DATA_MODEL.md` §8) pour pouvoir étendre aux joueurs plus tard sans migration. Implémentation isolée en Phase 6 de `docs/ROADMAP.md`, indépendante du reste du MVP.
 - **2026-08-24** — Couleurs par défaut du terrain fixées à gris (`#D9DBDE`) + bleu en-but (`#3D6FB4`) + lignes gris ardoise (`#4B4F58`) : neutre pour le terrain (ne concurrence pas les entités colorées), convention indoor pour l'en-but. Stockées comme un objet `colors?` optionnel sur `FieldConfig` avec fallback vers `DEFAULT_FIELD_COLORS`, pour rester configurables sans changement de schéma même si l'UI de personnalisation n'arrive qu'après le MVP.
+- **2026-08-24** — `Action.frames` remodélisé en **arbre** (`parentId`/`siblingOrder`/`branchLabel` plutôt qu'un simple `order`) pour supporter les plays à embranchements (ex. sortie de ligne avec choix around/strike), un cas jugé courant et non un edge case. Fusion de branches (DAG) explicitement exclue : un arbre pur reste beaucoup plus simple à éditer et à lire. Décidé avant toute persistance/export réel, donc pas de migration nécessaire (schéma révisé directement, `schemaVersion` inchangé). Contrairement à la trajectoire courbe du disque, ce changement touche le schéma central dès la Phase 1/2 déjà codées ; un correctif rétroactif de `src/domain/models.ts` et de la démo Phase 2 est nécessaire avant d'attaquer la Phase 4 (voir `docs/ROADMAP.md`).

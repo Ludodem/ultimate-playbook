@@ -21,7 +21,8 @@ Contraintes d'usage :
 - **Terrain** : représentation du terrain de jeu, avec un type configurable (voir §4.1).
 - **Entité** : un joueur (équipe offense ou défense) ou le disque, représenté par un cercle coloré (plus petit pour le disque).
 - **Frame (image-clé)** : un instantané des positions de toutes les entités à un moment donné de l'action.
-- **Action** : une séquence ordonnée de frames, avec un nom et des métadonnées, représentant un enchaînement tactique complet (ex. "Iso break side depuis stack vertical").
+- **Branche** : à partir d'une frame, une continuation alternative parmi plusieurs options possibles (ex. "sortie de ligne" avec un choix entre around et strike) — voir §4.3.
+- **Action** : un **arbre** de frames (une simple séquence dans le cas courant, sans branche), avec un nom et des métadonnées, représentant un enchaînement tactique complet (ex. "Iso break side depuis stack vertical").
 
 ## 4. Scope du MVP
 
@@ -49,9 +50,10 @@ Couleurs par défaut : terrain en **gris** (neutre, façon sol de gymnase, ne co
 
 ### 4.3 Éditeur d'action (frames)
 
-- Une action est une liste ordonnée de frames.
-- Créer une nouvelle frame **duplique la frame courante** (positions de départ = positions de la frame précédente), pour ne repositionner que ce qui change.
-- Réordonner, dupliquer, supprimer une frame via une bande de vignettes (timeline).
+- Une action est un **arbre de frames** : une simple séquence dans le cas courant, mais une frame peut avoir plusieurs continuations (**branches**) quand le play comporte un choix (ex. sortie de ligne : around ou strike) — ce n'est pas un cas marginal, un des tout premiers plays visés en a besoin.
+- Créer une nouvelle frame **duplique la frame courante** (positions de départ = positions de la frame précédente), pour ne repositionner que ce qui change. C'est l'action par défaut : elle crée une continuation simple (un seul enfant), le cas de figure le plus courant reste donc aussi simple qu'avant.
+- Créer une **branche** à partir de n'importe quelle frame ("ajouter une option depuis cette frame") : action distincte de la précédente, elle demande un nom court par branche (ex. "Autour", "Strike"). Si la frame n'avait jusque-là qu'une seule continuation, celle-ci doit être nommée rétroactivement au moment où le fork est créé.
+- Réordonner, dupliquer, supprimer une frame via une bande de vignettes (timeline), qui se scinde visuellement en pistes parallèles à partir d'un embranchement.
 - Déplacer une entité par glisser-déposer (souris ET tactile).
 - Assigner le disque à un joueur (le disque suit alors sa position) ou le positionner librement (ex. disque en vol entre deux frames).
 - Annoter une frame avec une note texte libre (ex. "coupe et swing").
@@ -59,8 +61,8 @@ Couleurs par défaut : terrain en **gris** (neutre, façon sol de gymnase, ne co
 
 ### 4.4 Mode lecture (Play)
 
-- **Pas à pas** : navigation manuelle frame par frame (précédent/suivant).
-- **Fluide** : animation continue interpolant les positions entre chaque paire de frames consécutives, avec vitesse réglable.
+- **Pas à pas** : navigation manuelle frame par frame (précédent/suivant). Arrivé sur une frame à plusieurs branches, "suivant" devient un choix entre les options disponibles.
+- **Fluide** : animation continue interpolant les positions entre chaque paire de frames consécutives, avec vitesse réglable. S'il y a des branches, le chemin complet à jouer se choisit **avant** de lancer la lecture (jamais d'interruption en cours d'animation pour demander un choix).
 - Affichage des flèches de déplacement entre deux frames consécutives (trajectoire de chaque joueur, distinction visuelle passe de disque / course de joueur).
 
 ### 4.5 Trajectoire courbe du disque
@@ -93,6 +95,7 @@ Couleurs par défaut : terrain en **gris** (neutre, façon sol de gymnase, ne co
 
 - Pas de moteur physique, pas de simulation de règles de jeu, pas de détection automatique de fautes/violations.
 - Pas de temps réel multi-utilisateur au MVP.
+- Pas de fusion de branches (le modèle de frames reste un arbre, jamais un graphe) : une fin de play partagée entre plusieurs options se duplique plutôt que de converger — voir `docs/DATA_MODEL.md` §9.
 
 ## 7. Critères de succès du MVP
 
