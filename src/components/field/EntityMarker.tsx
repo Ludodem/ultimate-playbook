@@ -35,22 +35,26 @@ export function EntityMarker({
   };
 
   return (
-    <Group>
+    // Le Group (pas le Circle) porte le drag/la position absolue : ses enfants
+    // sont en coordonnées relatives (0,0), pour que le cercle ET le label
+    // bougent ensemble. Draggable un enfant seul ne déplacerait que lui.
+    <Group
+      x={cx}
+      y={cy}
+      draggable={draggable}
+      onClick={handleSelect}
+      onTap={handleSelect}
+      onDragEnd={handleDragEnd}
+    >
       <Circle
-        x={cx}
-        y={cy}
         radius={radius}
         fill={ENTITY_COLORS[entity.team]}
         stroke={isSelected ? SELECTION_STROKE_COLOR : "#ffffff"}
         strokeWidth={isSelected ? 3 : 1.5}
-        draggable={draggable}
-        onClick={handleSelect}
-        onTap={handleSelect}
-        onDragEnd={handleDragEnd}
       />
       <Text
-        x={cx - radius}
-        y={cy - radius}
+        x={-radius}
+        y={-radius}
         width={radius * 2}
         height={radius * 2}
         text={entity.label}
