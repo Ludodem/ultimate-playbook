@@ -10,6 +10,8 @@ export interface FieldColors {
   endzone: string;
   /** Couleur des lignes de délimitation. */
   lines: string;
+  /** Couleur de la marge sideline, visible seulement si sidelineMarginMeters > 0. */
+  outOfBounds: string;
 }
 
 export interface FieldConfig {
@@ -20,6 +22,12 @@ export interface FieldConfig {
   widthMeters: number;
   /** Profondeur de l'en-but, en mètres. Absent si type === "undefined". */
   endzoneMeters?: number;
+  /**
+   * Marge hors-ligne à réserver de chaque côté (sidelines), en mètres.
+   * 0/absent = aucune marge (défaut) : la vue reste cadrée pile sur le terrain.
+   * Voir docs/DATA_MODEL.md, section "Marge sideline".
+   */
+  sidelineMarginMeters?: number;
   /** Couleurs personnalisées ; absent = valeurs par défaut (voir presets/fieldColors.ts). */
   colors?: FieldColors;
 }
@@ -32,7 +40,7 @@ export interface Entity {
   team: Team;
   /** Libellé affiché, ex: "1", "H1", "D3" — libre. */
   label: string;
-  /** Position en % de la largeur du terrain (0-100). */
+  /** Position en % de la largeur du terrain ; peut sortir de [0,100] pour une position hors-ligne (sideline). */
   x: number;
   /** Position en % de la longueur du terrain (0-100). */
   y: number;
@@ -43,7 +51,7 @@ export interface Entity {
 export interface Disc {
   /** Id d'une Entity, si le disque est en main. */
   heldBy?: string;
-  /** Position libre si heldBy est absent (0-100). */
+  /** Position libre si heldBy est absent ; peut sortir de [0,100] (sideline). */
   x?: number;
   y?: number;
 }

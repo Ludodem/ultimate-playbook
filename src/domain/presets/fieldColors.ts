@@ -7,6 +7,7 @@ export const DEFAULT_FIELD_COLORS: FieldColors = {
   field: "#D9DBDE",
   endzone: "#3D6FB4",
   lines: "#4B4F58",
+  outOfBounds: "#BFC2C7",
 };
 
 /**

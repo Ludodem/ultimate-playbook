@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { computeEndzones, endzoneGoalLine } from "./geometry";
+import { computeEndzones, computeVisibleXRangePercent, endzoneGoalLine } from "./geometry";
 import type { FieldConfig } from "./models";
 
 const half: FieldConfig = { type: "half", lengthMeters: 30, widthMeters: 18, endzoneMeters: 8 };
@@ -33,5 +33,23 @@ describe("endzoneGoalLine", () => {
 
   it("is the band's start when it ends at the field's end", () => {
     expect(endzoneGoalLine({ yStart: 86.7, yEnd: 100 })).toBeCloseTo(86.7);
+  });
+});
+
+describe("computeVisibleXRangePercent", () => {
+  it("is exactly [0, 100] when no sideline margin is set", () => {
+    expect(computeVisibleXRangePercent(half)).toEqual({ min: 0, max: 100 });
+  });
+
+  it("is exactly [0, 100] when the margin is explicitly 0", () => {
+    expect(computeVisibleXRangePercent({ ...half, sidelineMarginMeters: 0 })).toEqual({
+      min: 0,
+      max: 100,
+    });
+  });
+
+  it("extends symmetrically by the margin expressed as a % of widthMeters", () => {
+    const withMargin = { ...half, sidelineMarginMeters: 3.6 }; // 20% of widthMeters (18)
+    expect(computeVisibleXRangePercent(withMargin)).toEqual({ min: -20, max: 120 });
   });
 });

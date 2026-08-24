@@ -27,3 +27,22 @@ export function computeEndzones(fieldConfig: FieldConfig): EndzoneBand[] {
 export function endzoneGoalLine(band: EndzoneBand): number {
   return band.yStart === 0 ? band.yEnd : band.yStart;
 }
+
+/** Plage (en %) de l'axe largeur à rendre à l'écran. */
+export interface VisibleRange {
+  min: number;
+  max: number;
+}
+
+/**
+ * Plage visible sur l'axe largeur, incluant la marge sideline éventuelle
+ * (voir docs/DATA_MODEL.md, section "Marge sideline"). `{ min: 0, max: 100 }`
+ * quand `sidelineMarginMeters` est absent/0 — comportement inchangé par défaut.
+ */
+export function computeVisibleXRangePercent(fieldConfig: FieldConfig): VisibleRange {
+  if (!fieldConfig.sidelineMarginMeters) {
+    return { min: 0, max: 100 };
+  }
+  const marginPercent = (fieldConfig.sidelineMarginMeters / fieldConfig.widthMeters) * 100;
+  return { min: -marginPercent, max: 100 + marginPercent };
+}
