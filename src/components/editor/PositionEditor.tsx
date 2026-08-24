@@ -41,6 +41,7 @@ export function PositionEditor() {
             selectedEntityId,
             onEntitySelect: selectEntity,
             onEntityMove: moveEntity,
+            onEntityDelete: removeEntity,
             onDiscMove: moveDisc,
             onFieldClick: (x, y) => {
               if (selectedEntityId) moveEntity(selectedEntityId, x, y);

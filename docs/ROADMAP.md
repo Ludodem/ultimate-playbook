@@ -36,6 +36,7 @@ Convention : cocher une case au fur et à mesure de l'avancement. Si une tâche 
 - [x] Undo/redo sur les actions d'édition (pile d'historique des frames) — `past`/`future` dans le store.
 - [x] Mode d'interaction alternatif pour petits écrans : sélectionner un joueur (clic/tap) puis taper une destination sur le terrain, en plus du drag classique — les deux coexistent plutôt qu'un bascule de mode.
 - Validation : 33 tests unitaires (store + domaine) + parcours interactif vérifié via un script Playwright piloté (sélection, tap-to-move, ajout, drag souris, undo/redo x2, redo) — captures conformes, aucune erreur console.
+- [x] Retours utilisateur post-Phase 3 : header (titre + tagline) masqué sur l'écran d'édition/lecture pour libérer l'espace mobile (affiché seulement sur l'écran de démarrage) ; zone de dépôt "corbeille" affichée pendant le drag d'une entité, alternative découvrable au bouton "Supprimer" du panneau de sélection (`TrashZone.tsx`) ; nouvelle entité positionnée sur une case libre proche du centre (`domain/spawn.ts`, recherche en anneaux concentriques) plutôt que systématiquement à (50,50).
 
 ## Phase 4 — Gestion des frames & branches (timeline)
 

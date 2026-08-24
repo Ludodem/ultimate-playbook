@@ -10,6 +10,7 @@ import type { FieldConfig, Frame } from "../../domain/models";
 import { resolveFieldColors } from "../../domain/presets/fieldColors";
 import { DiscMarker } from "./DiscMarker";
 import { EntityMarker } from "./EntityMarker";
+import { TrashZone } from "./TrashZone";
 
 /**
  * Callbacks d'édition (Phase 3, `docs/ROADMAP.md`). Absent = rendu statique
@@ -19,6 +20,8 @@ export interface FieldInteractive {
   selectedEntityId: string | null;
   onEntitySelect: (id: string) => void;
   onEntityMove: (id: string, x: number, y: number) => void;
+  /** Relâché sur la zone "corbeille" pendant un drag — alternative au bouton "Supprimer". */
+  onEntityDelete: (id: string) => void;
   onDiscMove: (x: number, y: number) => void;
   /** Clic/tap sur une zone vide du terrain (coordonnées en %) — sert au mode
    * "sélectionner puis taper la destination" en plus du drag classique. */
@@ -48,6 +51,9 @@ const LINE_WIDTH = 2;
 export function Field({ fieldConfig, frame, interactive }: FieldProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);
+  const [dragState, setDragState] = useState<{ entityId: string; isOverTrash: boolean } | null>(
+    null,
+  );
 
   useEffect(() => {
     const container = containerRef.current;
@@ -75,6 +81,13 @@ export function Field({ fieldConfig, frame, interactive }: FieldProps) {
   const discRadius = fieldWidthPx * DISC_RADIUS_RATIO;
   const fieldLeft = toX(0);
   const fieldRight = toX(100);
+
+  // Zone "corbeille" affichée en coin supérieur droit du Stage pendant un drag
+  // (coordonnées écran, indépendantes de la marge sideline éventuelle).
+  const trashRadius = entityRadius * 1.4;
+  const trashCenter = { x: width - trashRadius - 10, y: trashRadius + 10 };
+  const isOverTrash = (px: number, py: number) =>
+    Math.hypot(px - trashCenter.x, py - trashCenter.y) <= trashRadius;
 
   const handleStageClick = (e: Konva.KonvaEventObject<Event>) => {
     if (!interactive) return;
@@ -138,9 +151,28 @@ export function Field({ fieldConfig, frame, interactive }: FieldProps) {
                 isSelected={interactive?.selectedEntityId === entity.id}
                 draggable={Boolean(interactive)}
                 onSelect={interactive ? () => interactive.onEntitySelect(entity.id) : undefined}
+                onDragStart={
+                  interactive
+                    ? () => setDragState({ entityId: entity.id, isOverTrash: false })
+                    : undefined
+                }
+                onDragMove={
+                  interactive
+                    ? (px, py) =>
+                        setDragState({ entityId: entity.id, isOverTrash: isOverTrash(px, py) })
+                    : undefined
+                }
                 onDragEnd={
                   interactive
-                    ? (px, py) => interactive.onEntityMove(entity.id, fromX(px), fromY(py))
+                    ? (px, py) => {
+                        const droppedOnTrash = isOverTrash(px, py);
+                        setDragState(null);
+                        if (droppedOnTrash) {
+                          interactive.onEntityDelete(entity.id);
+                        } else {
+                          interactive.onEntityMove(entity.id, fromX(px), fromY(py));
+                        }
+                      }
                     : undefined
                 }
               />
@@ -157,6 +189,14 @@ export function Field({ fieldConfig, frame, interactive }: FieldProps) {
               onDragEnd={
                 interactive ? (px, py) => interactive.onDiscMove(fromX(px), fromY(py)) : undefined
               }
+            />
+
+            <TrashZone
+              cx={trashCenter.x}
+              cy={trashCenter.y}
+              radius={trashRadius}
+              active={dragState !== null}
+              isOver={dragState?.isOverTrash ?? false}
             />
           </Layer>
         </Stage>

@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { resolveDiscPosition } from "../domain/disc";
 import type { Disc, Entity, FieldConfig, Frame, Team } from "../domain/models";
+import { findFreeSpawnPosition } from "../domain/spawn";
 import { getChildren, getSubtreeIds } from "../domain/tree";
 
 /** Voir docs/DATA_MODEL.md §2 : seuil recommandé, pas une limite technique. */
@@ -152,12 +153,13 @@ export const useActionEditorStore = create<ActionEditorState>((set, get) => ({
     set((state) => {
       const current = state.frames.find((f) => f.id === state.currentFrameId);
       if (!current) return {};
+      const spawn = findFreeSpawnPosition(current.entities);
       const newEntity: Entity = {
         id: crypto.randomUUID(),
         team,
         label: nextLabel(current.entities, team),
-        x: 50,
-        y: 50,
+        x: spawn.x,
+        y: spawn.y,
       };
       return updateCurrentFrame(state, (frame) => ({
         ...frame,

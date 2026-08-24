@@ -12,6 +12,8 @@ interface EntityMarkerProps {
   /** Présent seulement en mode édition (voir Field.tsx `interactive`). */
   draggable?: boolean;
   onSelect?: () => void;
+  onDragStart?: () => void;
+  onDragMove?: (px: number, py: number) => void;
   onDragEnd?: (px: number, py: number) => void;
 }
 
@@ -23,11 +25,17 @@ export function EntityMarker({
   isSelected = false,
   draggable = false,
   onSelect,
+  onDragStart,
+  onDragMove,
   onDragEnd,
 }: EntityMarkerProps) {
   const handleSelect = (e: Konva.KonvaEventObject<Event>) => {
     e.cancelBubble = true; // évite de déclencher aussi le clic "fond du terrain"
     onSelect?.();
+  };
+
+  const handleDragMove = (e: Konva.KonvaEventObject<DragEvent>) => {
+    onDragMove?.(e.target.x(), e.target.y());
   };
 
   const handleDragEnd = (e: Konva.KonvaEventObject<DragEvent>) => {
@@ -44,6 +52,8 @@ export function EntityMarker({
       draggable={draggable}
       onClick={handleSelect}
       onTap={handleSelect}
+      onDragStart={onDragStart}
+      onDragMove={handleDragMove}
       onDragEnd={handleDragEnd}
     >
       <Circle

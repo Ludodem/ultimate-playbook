@@ -8,8 +8,12 @@ function App() {
 
   return (
     <main className="app-shell">
-      <h1>{t("app.title")}</h1>
-      <p>{t("app.tagline")}</p>
+      {!hasStarted && (
+        <>
+          <h1>{t("app.title")}</h1>
+          <p>{t("app.tagline")}</p>
+        </>
+      )}
       {hasStarted ? <PositionEditor /> : <NewActionSetup />}
     </main>
   );
