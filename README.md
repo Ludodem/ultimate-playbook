@@ -31,7 +31,7 @@ Déployé automatiquement sur GitHub Pages à chaque push sur `main` (voir `.git
 
 ## État du projet
 
-🚧 **Phase 0 (bootstrap technique)** en cours — voir `docs/ROADMAP.md` pour le détail des phases.
+✅ **Phase 0 (bootstrap technique)** terminée. 🚧 Prochaine étape : Phase 1 (modèle de données & presets) — voir `docs/ROADMAP.md`.
 
 ## Licence
 
