@@ -1,0 +1,39 @@
+:root {
+  --text: #1f2328;
+  --bg: #ffffff;
+  color-scheme: light dark;
+  font:
+    16px/1.5 system-ui,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --text: #e6e6e6;
+    --bg: #14161a;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  color: var(--text);
+  background: var(--bg);
+}
+
+.app-shell {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+  text-align: center;
+}
+
+.placeholder {
+  color: gray;
+  font-style: italic;
+}

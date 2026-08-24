@@ -12,6 +12,7 @@ Usage principal visé : **Ultimate indoor 5v5**. L'outil doit néanmoins rester 
 - Joueurs qui consultent le playbook de leur équipe (en salle, sur le bord du terrain, ou à la maison).
 
 Contraintes d'usage :
+
 - Doit être utilisable sur **PC, tablette et smartphone** (édition ET consultation).
 - Utilisation possible en salle/bord de terrain avec une connectivité réseau incertaine → ne pas dépendre d'un backend pour consulter/éditer une action en MVP.
 
@@ -27,6 +28,7 @@ Contraintes d'usage :
 ### 4.1 Configuration du terrain
 
 Presets sélectionnables :
+
 - **Demi-terrain** (par défaut) — la majorité des actions se jouent dans une moitié de terrain avec en-but.
 - **Terrain complet** — avec les deux en-buts.
 - **Terrain indéfini** — un espace rectangulaire sans en-but (utile pour drills / exercices ne représentant pas une situation de match).

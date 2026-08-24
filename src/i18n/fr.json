@@ -1,0 +1,9 @@
+{
+  "app": {
+    "title": "Ultimate Playbook",
+    "tagline": "Éditez et rejouez vos actions d'Ultimate Frisbee"
+  },
+  "home": {
+    "placeholder": "L'éditeur de terrain arrive bientôt."
+  }
+}

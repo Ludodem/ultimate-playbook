@@ -14,9 +14,24 @@ Ce projet est développé en mode "agentifié" : la documentation ci-dessous fai
 - [`docs/ROADMAP.md`](docs/ROADMAP.md) — Découpage en phases et tâches actionnables.
 - [`CLAUDE.md`](CLAUDE.md) — Conventions et instructions pour les agents IA travaillant sur ce repo.
 
+## Démarrer en local
+
+```
+npm install
+npm run dev      # serveur de dev
+npm run test     # tests unitaires (Vitest)
+npm run lint     # ESLint
+npm run format   # Prettier
+npm run build    # build de production
+```
+
+## Déploiement
+
+Déployé automatiquement sur GitHub Pages à chaque push sur `main` (voir `.github/workflows/deploy.yml`) : **https://ludodem.github.io/ultimate-playbook/**
+
 ## État du projet
 
-📋 **Phase documentation** — le code n'est pas encore scaffoldé. Voir `docs/ROADMAP.md`, Phase 0, pour la première étape d'implémentation.
+🚧 **Phase 0 (bootstrap technique)** en cours — voir `docs/ROADMAP.md` pour le détail des phases.
 
 ## Licence
 

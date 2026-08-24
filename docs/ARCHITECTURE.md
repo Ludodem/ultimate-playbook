@@ -2,16 +2,16 @@
 
 ## 1. Stack technique
 
-| Domaine              | Choix                          | Justification |
-|-----------------------|--------------------------------|----------------|
-| Build tool            | **Vite**                        | Démarrage rapide, config simple, bon support GitHub Pages via `base`. |
-| UI                     | **React 18 + TypeScript**       | Écosystème large, typage utile pour un modèle de données structuré (frames, entités). |
-| Rendu terrain          | **Konva.js** (`react-konva`)    | Gère nativement drag & drop, pointer events (souris + tactile), animation/tween — correspond exactement au besoin (édition + lecture pas-à-pas/fluide). |
-| State management       | **Zustand**                     | Léger, suffisant pour l'état d'édition + bibliothèque locale, pas besoin de Redux. |
-| i18n                   | **react-i18next**                | Structure en place dès le MVP (FR complet, EN en fallback FR), voir PRD §4.6. |
-| Tests unitaires        | **Vitest** + Testing Library    | Cohérent avec Vite, rapide. |
-| Lint / format          | **ESLint + Prettier**           | Standard. |
-| Hébergement MVP        | **GitHub Pages**                 | Statique, gratuit, suffisant tant qu'il n'y a pas de backend. |
+| Domaine          | Choix                        | Justification                                                                                                                                           |
+| ---------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Build tool       | **Vite**                     | Démarrage rapide, config simple, bon support GitHub Pages via `base`.                                                                                   |
+| UI               | **React 18 + TypeScript**    | Écosystème large, typage utile pour un modèle de données structuré (frames, entités).                                                                   |
+| Rendu terrain    | **Konva.js** (`react-konva`) | Gère nativement drag & drop, pointer events (souris + tactile), animation/tween — correspond exactement au besoin (édition + lecture pas-à-pas/fluide). |
+| State management | **Zustand**                  | Léger, suffisant pour l'état d'édition + bibliothèque locale, pas besoin de Redux.                                                                      |
+| i18n             | **react-i18next**            | Structure en place dès le MVP (FR complet, EN en fallback FR), voir PRD §4.6.                                                                           |
+| Tests unitaires  | **Vitest** + Testing Library | Cohérent avec Vite, rapide.                                                                                                                             |
+| Lint / format    | **ESLint + Prettier**        | Standard.                                                                                                                                               |
+| Hébergement MVP  | **GitHub Pages**             | Statique, gratuit, suffisant tant qu'il n'y a pas de backend.                                                                                           |
 
 Aucun backend au MVP (voir `docs/PRD.md` §4.5). L'architecture doit rester **agnostique de l'hébergement** : pas de dépendance à une spécificité GitHub Pages dans le code applicatif (le `base` path et le workflow de déploiement sont isolés dans la config Vite / CI, pas dans le code métier), pour permettre une migration facile vers Netlify/Vercel/Supabase Hosting plus tard.
 

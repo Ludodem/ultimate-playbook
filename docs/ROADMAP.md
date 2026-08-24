@@ -6,13 +6,13 @@ Convention : cocher une case au fur et à mesure de l'avancement. Si une tâche 
 
 ## Phase 0 — Bootstrap technique
 
-- [ ] Scaffold Vite + React + TypeScript.
-- [ ] Installer et configurer : `react-konva`/`konva`, `zustand`, `react-i18next`, `vitest` + Testing Library, ESLint + Prettier.
-- [ ] Mettre en place la structure de dossiers cible (`docs/ARCHITECTURE.md` §2).
-- [ ] Config `vite.config.ts` avec `base: '/ultimate-playbook/'`.
-- [ ] Workflow GitHub Actions : build + déploiement sur GitHub Pages au push sur `main`.
-- [ ] i18n : structure `src/i18n/fr.json` avec quelques clés de test, langue par défaut FR.
-- [ ] Page d'accueil minimale ("Ultimate Playbook" + placeholder) qui build et déploie correctement, pour valider toute la chaîne avant d'attaquer les features.
+- [x] Scaffold Vite + React + TypeScript.
+- [x] Installer et configurer : `react-konva`/`konva`, `zustand`, `react-i18next`, `vitest` + Testing Library, ESLint + Prettier.
+- [x] Mettre en place la structure de dossiers cible (`docs/ARCHITECTURE.md` §2).
+- [x] Config `vite.config.ts` avec `base: '/ultimate-playbook/'`.
+- [x] Workflow GitHub Actions : build + déploiement sur GitHub Pages au push sur `main`.
+- [x] i18n : structure `src/i18n/fr.json` avec quelques clés de test, langue par défaut FR.
+- [ ] Page d'accueil minimale ("Ultimate Playbook" + placeholder) qui build et déploie correctement, pour valider toute la chaîne avant d'attaquer les features. *(build + tests locaux OK ; à cocher après confirmation du premier déploiement Pages réussi)*
 
 ## Phase 1 — Modèle de données & presets
 
