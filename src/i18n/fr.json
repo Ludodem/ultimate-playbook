@@ -41,6 +41,25 @@
       "delete": "Supprimer la frame",
       "branchLabel": "Nom de cette branche",
       "note": "Note"
+    },
+    "viewMode": {
+      "edit": "Éditer",
+      "play": "Jouer"
     }
+  },
+  "playback": {
+    "mode": {
+      "step": "Pas à pas",
+      "fluid": "Fluide"
+    },
+    "previous": "◀ Précédent",
+    "next": "Suivant ▶",
+    "end": "Fin de l'action",
+    "chooseBranch": "Choisissez une option :",
+    "play": "▶ Lecture",
+    "pause": "⏸ Pause",
+    "restart": "↺ Recommencer",
+    "changePath": "Changer de chemin",
+    "speed": "Vitesse :"
   }
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { resolveDiscPosition } from "./disc";
+import { findColocatedEntity, resolveDiscPosition } from "./disc";
 import type { Entity } from "./models";
 
 const holder: Entity = { id: "o1", team: "offense", label: "1", x: 40, y: 60, hasDisc: true };
@@ -20,5 +20,23 @@ describe("resolveDiscPosition", () => {
 
   it("returns null when nothing is set", () => {
     expect(resolveDiscPosition({}, [holder, other])).toBeNull();
+  });
+});
+
+describe("findColocatedEntity", () => {
+  it("finds an entity at (quasi-)exactly the given position", () => {
+    expect(findColocatedEntity({ x: 40, y: 60 }, [holder, other])?.id).toBe("o1");
+  });
+
+  it("tolerates tiny floating point differences", () => {
+    expect(findColocatedEntity({ x: 40.001, y: 59.999 }, [holder, other])?.id).toBe("o1");
+  });
+
+  it("returns undefined when no entity is at that position", () => {
+    expect(findColocatedEntity({ x: 10, y: 10 }, [holder, other])).toBeUndefined();
+  });
+
+  it("returns undefined for a position just outside the tolerance", () => {
+    expect(findColocatedEntity({ x: 40.05, y: 60 }, [holder, other])).toBeUndefined();
   });
 });

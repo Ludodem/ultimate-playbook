@@ -1,6 +1,6 @@
 import type Konva from "konva";
 import { Circle } from "react-konva";
-import { resolveDiscPosition } from "../../domain/disc";
+import { findColocatedEntity, resolveDiscPosition } from "../../domain/disc";
 import type { Disc, Entity } from "../../domain/models";
 import { DISC_FILL_COLOR, DISC_STROKE_COLOR } from "./theme";
 
@@ -31,10 +31,13 @@ export function DiscMarker({
   const position = resolveDiscPosition(disc, entities);
   if (!position) return null;
 
-  // Décalage purement visuel (coin haut-droit du porteur) : la position
-  // logique du disque, utilisée pour l'interpolation, reste celle du porteur
-  // (voir resolveDiscPosition / docs/DATA_MODEL.md).
-  const offset = disc.heldBy ? heldOffset * 0.9 : 0;
+  // Décalage purement visuel (coin haut-droit), basé sur la coïncidence de
+  // position plutôt que sur `disc.heldBy` : ce dernier ne survit pas à
+  // l'interpolation entre deux frames (voir domain/interpolation.ts), alors
+  // que la coïncidence de position, elle, reste vraie tout du long d'un
+  // segment "le porteur marche en tenant le disque".
+  const colocatedEntity = findColocatedEntity(position, entities);
+  const offset = colocatedEntity ? heldOffset * 0.9 : 0;
   const canDrag = draggable && !disc.heldBy;
 
   const handleDragEnd = (e: Konva.KonvaEventObject<DragEvent>) => {

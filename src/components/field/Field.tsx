@@ -10,6 +10,7 @@ import type { FieldConfig, Frame } from "../../domain/models";
 import { resolveFieldColors } from "../../domain/presets/fieldColors";
 import { DiscMarker } from "./DiscMarker";
 import { EntityMarker } from "./EntityMarker";
+import { TrajectoryArrows } from "./TrajectoryArrows";
 import { TrashZone } from "./TrashZone";
 
 /**
@@ -32,6 +33,9 @@ interface FieldProps {
   fieldConfig: FieldConfig;
   frame: Frame;
   interactive?: FieldInteractive;
+  /** Frame suivante (mode lecture pas à pas, Phase 5) : si fournie, affiche les
+   * flèches de trajectoire vers celle-ci. Sans effet en mode édition. */
+  nextFrame?: Frame;
 }
 
 // Proportions des marqueurs relatives à la largeur *en jeu* du terrain (pas à
@@ -48,7 +52,7 @@ const LINE_WIDTH = 2;
  * Gère la marge sideline (`FieldConfig.sidelineMarginMeters`) : la plage rendue
  * sur l'axe largeur peut dépasser [0,100], voir docs/DATA_MODEL.md.
  */
-export function Field({ fieldConfig, frame, interactive }: FieldProps) {
+export function Field({ fieldConfig, frame, interactive, nextFrame }: FieldProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);
   const [dragState, setDragState] = useState<{ entityId: string; isOverTrash: boolean } | null>(
@@ -198,6 +202,10 @@ export function Field({ fieldConfig, frame, interactive }: FieldProps) {
               active={dragState !== null}
               isOver={dragState?.isOverTrash ?? false}
             />
+
+            {nextFrame && (
+              <TrajectoryArrows frame={frame} nextFrame={nextFrame} toX={toX} toY={toY} />
+            )}
           </Layer>
         </Stage>
       )}

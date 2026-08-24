@@ -153,3 +153,56 @@ button {
   width: 100%;
   margin-top: 0.25rem;
 }
+
+/* Lecture (Phase 5) */
+
+.view-mode-switch,
+.playback-mode-switch {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.playback {
+  text-align: left;
+}
+
+.playback-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.75rem 0;
+}
+
+.frame-note-display {
+  font-style: italic;
+  color: gray;
+  margin: 0.5rem 0;
+}
+
+.playback-end {
+  font-weight: bold;
+}
+
+.fork-choice {
+  margin: 0.75rem 0;
+}
+
+.fork-choice-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.speed-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.speed-selector button.is-current {
+  background: #f2c94c;
+  border-color: #b8860b;
+  font-weight: bold;
+}

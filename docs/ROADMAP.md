@@ -51,10 +51,12 @@ Convention : cocher une case au fur et à mesure de l'avancement. Si une tâche 
 
 ## Phase 5 — Mode lecture (Play)
 
-- [ ] Fonction pure d'interpolation entre deux frames (`src/domain/interpolation.ts`) + tests unitaires.
-- [ ] Mode "pas à pas" : navigation précédent/suivant ; à un embranchement, choix inline entre les `branchLabel` disponibles au lieu d'un bouton "suivant" unique.
-- [ ] Mode "fluide" : lecture animée avec `requestAnimationFrame`, vitesse réglable ; s'il y a des branches, sélection d'un chemin complet (via `resolvePath`) avant de lancer la lecture.
-- [ ] Affichage des flèches de trajectoire entre deux frames consécutives (distinction course de joueur / passe de disque).
+- [x] Fonction pure d'interpolation entre deux frames (`src/domain/interpolation.ts`) + tests unitaires — `buildInterpolatedFrame` (renvoie une vraie `Frame`, directement réutilisable par `Field` sans code de rendu spécifique au mode lecture).
+- [x] Mode "pas à pas" : navigation précédent/suivant ; à un embranchement, choix inline entre les `branchLabel` disponibles au lieu d'un bouton "suivant" unique — `StepPlayback.tsx`. Avancer ("suivant" ou un choix de branche) anime la transition (même logique d'interpolation que le mode fluide, sur un seul segment) plutôt qu'un saut immédiat ; revenir en arrière reste instantané.
+- [x] Mode "fluide" : lecture animée avec `requestAnimationFrame`, vitesse réglable ; s'il y a des branches, sélection d'un chemin complet (via `resolvePath`) avant de lancer la lecture — `FluidPlayback.tsx`.
+- [x] Affichage des flèches de trajectoire entre deux frames consécutives (distinction course de joueur / passe de disque) — `TrajectoryArrows.tsx`, en mode pas à pas uniquement (masquées pendant une animation en cours).
+- Correctif au passage : le décalage visuel du disque tenu (pour ne pas masquer le label du porteur) était basé sur `disc.heldBy`, qui ne survit pas à l'interpolation entre deux frames — rebasé sur la coïncidence de position (`findColocatedEntity`), qui reste vraie tout du long d'un segment où le porteur se déplace en tenant le disque.
+- Validation : tests unitaires (interpolation, timing, coïncidence de position) + parcours interactif vérifié via Playwright (pas à pas avec flèches, embranchement, mode fluide avec choix de chemin, vitesse, mi-animation, fin) — aucune erreur console.
 
 ## Phase 6 — Trajectoire courbe du disque
 

@@ -1,11 +1,16 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Field } from "../field";
+import { PlaybackView } from "../playback";
 import { MAX_RECOMMENDED_PER_TEAM, useActionEditorStore } from "../../state/actionEditorStore";
 import { FrameTimeline } from "./FrameTimeline";
 
-/** Éditeur de positions d'une action en cours (Phases 3-4, docs/ROADMAP.md). */
+type ViewMode = "edit" | "play";
+
+/** Éditeur de positions d'une action en cours (Phases 3-5, docs/ROADMAP.md). */
 export function PositionEditor() {
   const { t } = useTranslation();
+  const [viewMode, setViewMode] = useState<ViewMode>("edit");
   const fieldConfig = useActionEditorStore((s) => s.fieldConfig);
   const frames = useActionEditorStore((s) => s.frames);
   const currentFrameId = useActionEditorStore((s) => s.currentFrameId);
@@ -33,69 +38,84 @@ export function PositionEditor() {
 
   return (
     <div className="editor">
-      <div className="field-demo">
-        <Field
-          fieldConfig={fieldConfig}
-          frame={frame}
-          interactive={{
-            selectedEntityId,
-            onEntitySelect: selectEntity,
-            onEntityMove: moveEntity,
-            onEntityDelete: removeEntity,
-            onDiscMove: moveDisc,
-            onFieldClick: (x, y) => {
-              if (selectedEntityId) moveEntity(selectedEntityId, x, y);
-            },
-          }}
-        />
+      <div className="view-mode-switch">
+        <button type="button" onClick={() => setViewMode("edit")} disabled={viewMode === "edit"}>
+          {t("editor.viewMode.edit")}
+        </button>
+        <button type="button" onClick={() => setViewMode("play")} disabled={viewMode === "play"}>
+          {t("editor.viewMode.play")}
+        </button>
       </div>
 
-      <p className="hint">{t("editor.toolbar.selectionHint")}</p>
+      {viewMode === "play" ? (
+        <PlaybackView />
+      ) : (
+        <>
+          <div className="field-demo">
+            <Field
+              fieldConfig={fieldConfig}
+              frame={frame}
+              interactive={{
+                selectedEntityId,
+                onEntitySelect: selectEntity,
+                onEntityMove: moveEntity,
+                onEntityDelete: removeEntity,
+                onDiscMove: moveDisc,
+                onFieldClick: (x, y) => {
+                  if (selectedEntityId) moveEntity(selectedEntityId, x, y);
+                },
+              }}
+            />
+          </div>
 
-      <div className="toolbar">
-        <button type="button" onClick={() => addEntity("offense")}>
-          {t("editor.toolbar.addOffense")}
-        </button>
-        <button type="button" onClick={() => addEntity("defense")}>
-          {t("editor.toolbar.addDefense")}
-        </button>
-        <button type="button" onClick={undo} disabled={past.length === 0}>
-          {t("editor.toolbar.undo")}
-        </button>
-        <button type="button" onClick={redo} disabled={future.length === 0}>
-          {t("editor.toolbar.redo")}
-        </button>
-        {frame.disc.heldBy && (
-          <button type="button" onClick={freeDisc}>
-            {t("editor.toolbar.freeDisc")}
-          </button>
-        )}
-      </div>
+          <p className="hint">{t("editor.toolbar.selectionHint")}</p>
 
-      {showRosterWarning && (
-        <p className="warning">
-          {t("editor.toolbar.rosterWarning", { max: MAX_RECOMMENDED_PER_TEAM })}
-        </p>
+          <div className="toolbar">
+            <button type="button" onClick={() => addEntity("offense")}>
+              {t("editor.toolbar.addOffense")}
+            </button>
+            <button type="button" onClick={() => addEntity("defense")}>
+              {t("editor.toolbar.addDefense")}
+            </button>
+            <button type="button" onClick={undo} disabled={past.length === 0}>
+              {t("editor.toolbar.undo")}
+            </button>
+            <button type="button" onClick={redo} disabled={future.length === 0}>
+              {t("editor.toolbar.redo")}
+            </button>
+            {frame.disc.heldBy && (
+              <button type="button" onClick={freeDisc}>
+                {t("editor.toolbar.freeDisc")}
+              </button>
+            )}
+          </div>
+
+          {showRosterWarning && (
+            <p className="warning">
+              {t("editor.toolbar.rosterWarning", { max: MAX_RECOMMENDED_PER_TEAM })}
+            </p>
+          )}
+
+          {selectedEntity && (
+            <div className="selection-panel">
+              <span>
+                {selectedEntity.label} ({selectedEntity.team})
+              </span>
+              <button type="button" onClick={() => assignDiscTo(selectedEntity.id)}>
+                {t("editor.toolbar.giveDisc")}
+              </button>
+              <button type="button" onClick={() => removeEntity(selectedEntity.id)}>
+                {t("editor.toolbar.remove")}
+              </button>
+              <button type="button" onClick={() => selectEntity(null)}>
+                {t("editor.toolbar.deselect")}
+              </button>
+            </div>
+          )}
+
+          <FrameTimeline />
+        </>
       )}
-
-      {selectedEntity && (
-        <div className="selection-panel">
-          <span>
-            {selectedEntity.label} ({selectedEntity.team})
-          </span>
-          <button type="button" onClick={() => assignDiscTo(selectedEntity.id)}>
-            {t("editor.toolbar.giveDisc")}
-          </button>
-          <button type="button" onClick={() => removeEntity(selectedEntity.id)}>
-            {t("editor.toolbar.remove")}
-          </button>
-          <button type="button" onClick={() => selectEntity(null)}>
-            {t("editor.toolbar.deselect")}
-          </button>
-        </div>
-      )}
-
-      <FrameTimeline />
     </div>
   );
 }
