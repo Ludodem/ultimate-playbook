@@ -1,12 +1,15 @@
 import { useTranslation } from "react-i18next";
 import { Field } from "../field";
 import { MAX_RECOMMENDED_PER_TEAM, useActionEditorStore } from "../../state/actionEditorStore";
+import { FrameTimeline } from "./FrameTimeline";
 
-/** Éditeur de positions d'une action en cours (Phase 3, docs/ROADMAP.md). */
+/** Éditeur de positions d'une action en cours (Phases 3-4, docs/ROADMAP.md). */
 export function PositionEditor() {
   const { t } = useTranslation();
   const fieldConfig = useActionEditorStore((s) => s.fieldConfig);
-  const frame = useActionEditorStore((s) => s.frame);
+  const frames = useActionEditorStore((s) => s.frames);
+  const currentFrameId = useActionEditorStore((s) => s.currentFrameId);
+  const frame = frames.find((f) => f.id === currentFrameId) ?? null;
   const selectedEntityId = useActionEditorStore((s) => s.selectedEntityId);
   const selectEntity = useActionEditorStore((s) => s.selectEntity);
   const moveEntity = useActionEditorStore((s) => s.moveEntity);
@@ -90,6 +93,8 @@ export function PositionEditor() {
           </button>
         </div>
       )}
+
+      <FrameTimeline />
     </div>
   );
 }

@@ -31,7 +31,7 @@ Déployé automatiquement sur GitHub Pages à chaque push sur `main` (voir `.git
 
 ## État du projet
 
-✅ **Phases 0 à 3** terminées (bootstrap, modèle de données, rendu du terrain, édition des positions). 🚧 Prochaine étape : Phase 4 (gestion des frames & branches) — voir `docs/ROADMAP.md`.
+✅ **Phases 0 à 4** terminées (bootstrap, modèle de données, rendu du terrain, édition des positions, timeline & branches). 🚧 Prochaine étape : Phase 5 (mode lecture) — voir `docs/ROADMAP.md`.
 
 ## Licence
 

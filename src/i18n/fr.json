@@ -28,6 +28,19 @@
       "remove": "Supprimer",
       "deselect": "Désélectionner",
       "selectionHint": "Astuce : sélectionnez un joueur puis tapez sur le terrain pour le déplacer, en plus du glisser-déposer."
+    },
+    "frames": {
+      "title": "Frames",
+      "next": "+ Frame suivante",
+      "addBranch": "+ Ajouter une option",
+      "branchLabelPlaceholder": "Nom de la branche (ex. Strike)",
+      "confirm": "Valider",
+      "cancel": "Annuler",
+      "moveUp": "↑ Monter",
+      "moveDown": "↓ Descendre",
+      "delete": "Supprimer la frame",
+      "branchLabel": "Nom de cette branche",
+      "note": "Note"
     }
   }
 }

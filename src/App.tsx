@@ -4,13 +4,13 @@ import { useActionEditorStore } from "./state/actionEditorStore";
 
 function App() {
   const { t } = useTranslation();
-  const frame = useActionEditorStore((s) => s.frame);
+  const hasStarted = useActionEditorStore((s) => s.currentFrameId !== null);
 
   return (
     <main className="app-shell">
       <h1>{t("app.title")}</h1>
       <p>{t("app.tagline")}</p>
-      {frame ? <PositionEditor /> : <NewActionSetup />}
+      {hasStarted ? <PositionEditor /> : <NewActionSetup />}
     </main>
   );
 }

@@ -67,8 +67,12 @@ export type IncomingCurves = Record<string, CurveControlPoint>;
 
 export interface Frame {
   id: string;
-  /** Position dans la séquence (0-based). */
-  order: number;
+  /** Frame précédente dans l'arbre ; null uniquement pour LA frame racine. Voir docs/DATA_MODEL.md §9. */
+  parentId: string | null;
+  /** Position parmi les frames partageant le même parentId (ordre des branches à un embranchement). */
+  siblingOrder: number;
+  /** Nom court de cette branche (ex. "Autour", "Strike") ; obligatoire si le parent a plus d'un enfant. */
+  branchLabel?: string;
   /** Annotation libre affichée pendant l'édition et la lecture. */
   note?: string;
   /** Durée de l'interpolation DEPUIS la frame précédente en mode "fluide". */
@@ -88,7 +92,7 @@ export interface Action {
   fieldConfig: FieldConfig;
   /** Durée par défaut d'une transition en mode fluide (ex: 1200). */
   defaultTransitionMs: number;
-  /** Toujours >= 1. */
+  /** Arbre à plat (voir docs/DATA_MODEL.md §9) ; toujours >= 1 ; exactement une frame avec parentId === null. */
   frames: Frame[];
   /** ISO 8601 */
   createdAt: string;

@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { getFieldPreset } from "../domain/presets/field";
 import { emptyPreset } from "../domain/presets/roster";
+import { getChildren } from "../domain/tree";
 import { useActionEditorStore } from "./actionEditorStore";
 
 const fieldConfig = getFieldPreset("half");
@@ -9,122 +10,218 @@ function startEmpty() {
   useActionEditorStore.getState().start(fieldConfig, emptyPreset());
 }
 
+function currentFrame() {
+  const { frames, currentFrameId } = useActionEditorStore.getState();
+  return frames.find((f) => f.id === currentFrameId)!;
+}
+
 describe("actionEditorStore", () => {
   beforeEach(() => {
     startEmpty();
   });
 
-  it("start() initializes a single frame from the given preset", () => {
-    const { frame } = useActionEditorStore.getState();
-    expect(frame?.entities).toHaveLength(0);
-    expect(frame?.disc).toEqual({ x: 50, y: 50 });
+  it("start() creates a single root frame from the given preset", () => {
+    const { frames, currentFrameId } = useActionEditorStore.getState();
+    expect(frames).toHaveLength(1);
+    expect(frames[0].parentId).toBeNull();
+    expect(currentFrameId).toBe(frames[0].id);
   });
 
-  it("addEntity() appends an entity with an incrementing label per team", () => {
+  it("addEntity() appends an entity with an incrementing label per team, on the current frame", () => {
     const { addEntity } = useActionEditorStore.getState();
     addEntity("offense");
     addEntity("offense");
     addEntity("defense");
 
-    const { frame } = useActionEditorStore.getState();
-    const offenseLabels = frame?.entities.filter((e) => e.team === "offense").map((e) => e.label);
-    const defenseLabels = frame?.entities.filter((e) => e.team === "defense").map((e) => e.label);
+    const offenseLabels = currentFrame()
+      .entities.filter((e) => e.team === "offense")
+      .map((e) => e.label);
+    const defenseLabels = currentFrame()
+      .entities.filter((e) => e.team === "defense")
+      .map((e) => e.label);
     expect(offenseLabels).toEqual(["1", "2"]);
     expect(defenseLabels).toEqual(["1"]);
   });
 
-  it("moveEntity() updates only the targeted entity's position", () => {
-    const { addEntity, moveEntity } = useActionEditorStore.getState();
+  it("moveEntity() / assignDiscTo() / freeDisc() / removeEntity() behave as in Phase 3, scoped to the current frame", () => {
+    const { addEntity, moveEntity, assignDiscTo, freeDisc, removeEntity } =
+      useActionEditorStore.getState();
     addEntity("offense");
-    const id = useActionEditorStore.getState().frame!.entities[0].id;
+    const id = currentFrame().entities[0].id;
 
     moveEntity(id, 12, 34);
+    expect(currentFrame().entities[0]).toMatchObject({ x: 12, y: 34 });
 
-    expect(useActionEditorStore.getState().frame?.entities[0]).toMatchObject({ x: 12, y: 34 });
-  });
-
-  it("removeEntity() drops the entity and clears selection if it was selected", () => {
-    const { addEntity, selectEntity, removeEntity } = useActionEditorStore.getState();
-    addEntity("offense");
-    const id = useActionEditorStore.getState().frame!.entities[0].id;
-    selectEntity(id);
-
-    removeEntity(id);
-
-    expect(useActionEditorStore.getState().frame?.entities).toHaveLength(0);
-    expect(useActionEditorStore.getState().selectedEntityId).toBeNull();
-  });
-
-  it("removeEntity() frees the disc at its last position when the holder is removed", () => {
-    const { addEntity, assignDiscTo, moveEntity, removeEntity } = useActionEditorStore.getState();
-    addEntity("offense");
-    const id = useActionEditorStore.getState().frame!.entities[0].id;
     assignDiscTo(id);
-    moveEntity(id, 20, 30);
-
-    removeEntity(id);
-
-    expect(useActionEditorStore.getState().frame?.disc).toEqual({ x: 20, y: 30 });
-  });
-
-  it("assignDiscTo() ensures at most one holder", () => {
-    const { addEntity, assignDiscTo } = useActionEditorStore.getState();
-    addEntity("offense");
-    addEntity("offense");
-    const [first, second] = useActionEditorStore.getState().frame!.entities;
-
-    assignDiscTo(first.id);
-    assignDiscTo(second.id);
-
-    const { frame } = useActionEditorStore.getState();
-    expect(frame?.disc).toEqual({ heldBy: second.id });
-    expect(frame?.entities.find((e) => e.id === first.id)?.hasDisc).toBeFalsy();
-    expect(frame?.entities.find((e) => e.id === second.id)?.hasDisc).toBe(true);
-  });
-
-  it("freeDisc() detaches the disc at the holder's current position", () => {
-    const { addEntity, assignDiscTo, moveEntity, freeDisc } = useActionEditorStore.getState();
-    addEntity("offense");
-    const id = useActionEditorStore.getState().frame!.entities[0].id;
-    assignDiscTo(id);
-    moveEntity(id, 15, 25);
+    expect(currentFrame().disc).toEqual({ heldBy: id });
 
     freeDisc();
+    expect(currentFrame().disc).toEqual({ x: 12, y: 34 });
 
-    const { frame } = useActionEditorStore.getState();
-    expect(frame?.disc).toEqual({ x: 15, y: 25 });
-    expect(frame?.entities[0].hasDisc).toBeFalsy();
+    removeEntity(id);
+    expect(currentFrame().entities).toHaveLength(0);
   });
 
-  it("undo()/redo() round-trip through the history stack", () => {
-    const { addEntity, moveEntity, undo, redo } = useActionEditorStore.getState();
-    addEntity("offense");
-    const id = useActionEditorStore.getState().frame!.entities[0].id;
-    moveEntity(id, 10, 10);
-    moveEntity(id, 90, 90);
+  describe("addNextFrame", () => {
+    it("creates a single child continuation of the current frame and selects it", () => {
+      const rootId = useActionEditorStore.getState().currentFrameId!;
+      useActionEditorStore.getState().addNextFrame();
 
-    undo();
-    expect(useActionEditorStore.getState().frame?.entities[0]).toMatchObject({ x: 10, y: 10 });
+      const { frames, currentFrameId } = useActionEditorStore.getState();
+      expect(frames).toHaveLength(2);
+      expect(currentFrameId).not.toBe(rootId);
+      expect(getChildren(frames, rootId)).toHaveLength(1);
+      expect(getChildren(frames, rootId)[0].id).toBe(currentFrameId);
+    });
 
-    undo();
-    expect(useActionEditorStore.getState().frame?.entities[0]).toMatchObject({ x: 50, y: 50 });
+    it("copies the current frame's entities/disc into the new frame", () => {
+      useActionEditorStore.getState().addEntity("offense");
+      const id = currentFrame().entities[0].id;
+      useActionEditorStore.getState().assignDiscTo(id);
 
-    redo();
-    expect(useActionEditorStore.getState().frame?.entities[0]).toMatchObject({ x: 10, y: 10 });
+      useActionEditorStore.getState().addNextFrame();
 
-    redo();
-    expect(useActionEditorStore.getState().frame?.entities[0]).toMatchObject({ x: 90, y: 90 });
+      expect(currentFrame().entities).toHaveLength(1);
+      expect(currentFrame().disc).toEqual({ heldBy: id });
+    });
+
+    it("is a no-op when the current frame already has a child", () => {
+      useActionEditorStore.getState().addNextFrame();
+      const frameCountAfterFirst = useActionEditorStore.getState().frames.length;
+
+      useActionEditorStore.getState().selectFrame(useActionEditorStore.getState().frames[0].id);
+      useActionEditorStore.getState().addNextFrame();
+
+      expect(useActionEditorStore.getState().frames).toHaveLength(frameCountAfterFirst);
+    });
   });
 
-  it("a new action after undo clears the redo stack", () => {
-    const { addEntity, moveEntity, undo } = useActionEditorStore.getState();
-    addEntity("offense");
-    const id = useActionEditorStore.getState().frame!.entities[0].id;
-    moveEntity(id, 10, 10);
-    undo();
+  describe("addBranch / renameBranch", () => {
+    it("creates a labeled second child and retroactively labels the pre-existing one", () => {
+      useActionEditorStore.getState().addNextFrame();
+      const rootId = useActionEditorStore.getState().frames.find((f) => f.parentId === null)!.id;
+      const firstChildId = getChildren(useActionEditorStore.getState().frames, rootId)[0].id;
+      useActionEditorStore.getState().selectFrame(rootId);
 
-    moveEntity(id, 77, 77);
+      useActionEditorStore.getState().addBranch("Strike");
 
-    expect(useActionEditorStore.getState().future).toHaveLength(0);
+      const { frames, currentFrameId } = useActionEditorStore.getState();
+      const children = getChildren(frames, rootId);
+      expect(children).toHaveLength(2);
+      expect(children.find((f) => f.id === firstChildId)?.branchLabel).toBe("Option 1");
+      expect(children.find((f) => f.id === currentFrameId)?.branchLabel).toBe("Strike");
+    });
+
+    it("does not touch the existing branchLabel when the parent is already a fork", () => {
+      useActionEditorStore.getState().addBranch("Autour");
+      const rootId = useActionEditorStore.getState().frames.find((f) => f.parentId === null)!.id;
+      useActionEditorStore.getState().selectFrame(rootId);
+
+      useActionEditorStore.getState().addBranch("Strike");
+
+      const children = getChildren(useActionEditorStore.getState().frames, rootId);
+      expect(children.map((c) => c.branchLabel)).toEqual(["Autour", "Strike"]);
+    });
+
+    it("renameBranch() overrides a branch's label", () => {
+      useActionEditorStore.getState().addBranch("Autour");
+      const branchId = useActionEditorStore.getState().currentFrameId!;
+
+      useActionEditorStore.getState().renameBranch(branchId, "Around");
+
+      expect(currentFrame().branchLabel).toBe("Around");
+    });
+  });
+
+  describe("deleteFrame", () => {
+    it("is a no-op on the root frame", () => {
+      const rootId = useActionEditorStore.getState().currentFrameId!;
+      useActionEditorStore.getState().deleteFrame(rootId);
+      expect(useActionEditorStore.getState().frames).toHaveLength(1);
+    });
+
+    it("removes a frame and its whole subtree", () => {
+      useActionEditorStore.getState().addNextFrame();
+      const childId = useActionEditorStore.getState().currentFrameId!;
+      useActionEditorStore.getState().addNextFrame(); // grandchild
+
+      useActionEditorStore.getState().deleteFrame(childId);
+
+      expect(useActionEditorStore.getState().frames).toHaveLength(1);
+    });
+
+    it("falls back to the parent when the deleted subtree contained the current frame", () => {
+      const rootId = useActionEditorStore.getState().currentFrameId!;
+      useActionEditorStore.getState().addNextFrame();
+      const childId = useActionEditorStore.getState().currentFrameId!;
+
+      useActionEditorStore.getState().deleteFrame(childId);
+
+      expect(useActionEditorStore.getState().currentFrameId).toBe(rootId);
+    });
+  });
+
+  describe("moveFrameUp / moveFrameDown", () => {
+    it("swaps a frame with its single-child parent", () => {
+      const rootId = useActionEditorStore.getState().currentFrameId!;
+      useActionEditorStore.getState().addNextFrame();
+      const childId = useActionEditorStore.getState().currentFrameId!;
+
+      useActionEditorStore.getState().moveFrameUp(childId);
+
+      const { frames } = useActionEditorStore.getState();
+      expect(frames.find((f) => f.id === childId)?.parentId).toBeNull();
+      expect(frames.find((f) => f.id === rootId)?.parentId).toBe(childId);
+    });
+
+    it("is a no-op when the parent is a fork", () => {
+      const rootId = useActionEditorStore.getState().currentFrameId!;
+      useActionEditorStore.getState().addBranch("Autour");
+      useActionEditorStore.getState().selectFrame(rootId);
+      useActionEditorStore.getState().addBranch("Strike"); // root a maintenant 2 enfants : un vrai fork
+      const branchId = useActionEditorStore.getState().currentFrameId!;
+      const before = useActionEditorStore.getState().frames;
+
+      useActionEditorStore.getState().moveFrameUp(branchId);
+
+      expect(useActionEditorStore.getState().frames).toEqual(before);
+    });
+
+    it("moveFrameDown swaps a frame with its single child", () => {
+      const rootId = useActionEditorStore.getState().currentFrameId!;
+      useActionEditorStore.getState().addNextFrame();
+      const childId = useActionEditorStore.getState().currentFrameId!;
+
+      useActionEditorStore.getState().moveFrameDown(rootId);
+
+      const { frames } = useActionEditorStore.getState();
+      expect(frames.find((f) => f.id === childId)?.parentId).toBeNull();
+      expect(frames.find((f) => f.id === rootId)?.parentId).toBe(childId);
+    });
+  });
+
+  describe("undo / redo", () => {
+    it("restores both the frame tree and the previously viewed frame", () => {
+      const rootId = useActionEditorStore.getState().currentFrameId!;
+      useActionEditorStore.getState().addNextFrame();
+      const childId = useActionEditorStore.getState().currentFrameId!;
+
+      useActionEditorStore.getState().undo();
+      expect(useActionEditorStore.getState().frames).toHaveLength(1);
+      expect(useActionEditorStore.getState().currentFrameId).toBe(rootId);
+
+      useActionEditorStore.getState().redo();
+      expect(useActionEditorStore.getState().frames).toHaveLength(2);
+      expect(useActionEditorStore.getState().currentFrameId).toBe(childId);
+    });
+
+    it("a new action after undo clears the redo stack", () => {
+      useActionEditorStore.getState().addNextFrame();
+      useActionEditorStore.getState().undo();
+
+      useActionEditorStore.getState().addEntity("offense");
+
+      expect(useActionEditorStore.getState().future).toHaveLength(0);
+    });
   });
 });

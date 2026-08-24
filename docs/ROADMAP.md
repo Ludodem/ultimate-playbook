@@ -39,13 +39,14 @@ Convention : cocher une case au fur et à mesure de l'avancement. Si une tâche 
 
 ## Phase 4 — Gestion des frames & branches (timeline)
 
-- [ ] Correctif rétroactif : migrer `Frame`/`Action` du modèle `order`-based vers l'arbre (`parentId`/`siblingOrder`/`branchLabel`, voir `docs/DATA_MODEL.md` §9) dans `src/domain/models.ts`, et mettre à jour la démo de la Phase 2 (`App.tsx`) en conséquence.
-- [ ] `src/domain/tree.ts` : fonctions pures `getChildren`, `getRootFrame`, `isForkFrame`, `resolvePath` + tests unitaires (voir `docs/ARCHITECTURE.md` §7).
-- [ ] Bande de vignettes représentant les frames de l'action courante ; se scinde en pistes parallèles à partir d'un embranchement, chaque piste étiquetée par son `branchLabel`.
-- [ ] Créer une nouvelle frame par duplication de la frame courante (continuation simple, un seul enfant).
-- [ ] Créer une branche à partir de n'importe quelle frame ("ajouter une option depuis cette frame") : demande un `branchLabel` pour la nouvelle branche, et labellise rétroactivement l'enfant existant si le parent n'en avait qu'un jusque-là.
-- [ ] Réordonner / dupliquer / supprimer une frame (au sein d'une branche).
-- [ ] Annotation texte libre par frame.
+- [x] Correctif rétroactif : migrer `Frame`/`Action` du modèle `order`-based vers l'arbre (`parentId`/`siblingOrder`/`branchLabel`, voir `docs/DATA_MODEL.md` §9) dans `src/domain/models.ts`. _(La démo de la Phase 2 dans `App.tsx` avait déjà été remplacée par l'éditeur réel en Phase 3 ; rien à migrer là.)_
+- [x] `src/domain/tree.ts` : fonctions pures `getChildren`, `getRootFrame`, `isForkFrame`, `resolvePath` (+ `getFrame`, `getSubtreeIds`, `computeDisplayOrder`) + 13 tests unitaires (voir `docs/ARCHITECTURE.md` §7).
+- [x] Bande de vignettes représentant les frames de l'action courante ; se scinde en pistes parallèles à partir d'un embranchement, chaque piste étiquetée par son `branchLabel` — `FrameTimeline.tsx` + `BranchChain.tsx` (récursif).
+- [x] Créer une nouvelle frame par duplication de la frame courante (continuation simple, un seul enfant) — `addNextFrame`, désactivé si la frame courante a déjà un enfant.
+- [x] Créer une branche à partir de n'importe quelle frame ("ajouter une option depuis cette frame") : demande un `branchLabel` pour la nouvelle branche, et labellise rétroactivement l'enfant existant si le parent n'en avait qu'un jusque-là — `addBranch`, `renameBranch`.
+- [x] Réordonner / supprimer une frame (au sein d'une branche) — `moveFrameUp`/`moveFrameDown` (échange avec le parent/enfant unique, désactivé si le parent est un embranchement), `deleteFrame` (supprime le sous-arbre, retombe sur le parent si la frame courante en faisait partie ; racine non supprimable). _(Pas d'action "dupliquer une frame en place" distincte : `addNextFrame`/`addBranch` couvrent déjà le besoin de dupliquer le contenu vers une nouvelle frame.)_
+- [x] Annotation texte libre par frame — `setNote`.
+- Validation : 17 tests unitaires supplémentaires (store, arbre) + parcours interactif vérifié via Playwright (frames en chaîne, création de 2 branches avec labellisation rétroactive, renommage, undo/redo) — captures conformes, aucune erreur console.
 
 ## Phase 5 — Mode lecture (Play)
 
