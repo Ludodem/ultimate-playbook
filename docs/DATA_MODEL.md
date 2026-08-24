@@ -7,11 +7,18 @@ Toutes les coordonnées sont exprimées en **pourcentage (0–100) de la largeur
 ```ts
 type FieldType = "half" | "full" | "undefined";
 
+interface FieldColors {
+  field: string; // couleur de la zone de jeu hors en-but (hex)
+  endzone: string; // couleur de l'en-but, ignorée si type === "undefined"
+  lines: string; // couleur des lignes de délimitation
+}
+
 interface FieldConfig {
   type: FieldType;
   lengthMeters: number; // longueur totale du terrain représenté
   widthMeters: number; // largeur du terrain
   endzoneMeters?: number; // profondeur de l'en-but, absent si type === "undefined"
+  colors?: FieldColors; // absent = valeurs par défaut (voir ci-dessous)
 }
 ```
 
@@ -24,6 +31,16 @@ Valeurs par défaut suggérées (indoor, modifiables par l'utilisateur) :
 | `undefined`     | 20     | 18    | —       |
 
 > Ces valeurs sont indicatives pour un gymnase standard ; à ajuster lors de l'implémentation si besoin. Elles doivent rester des constantes de configuration facilement modifiables, pas des valeurs éparpillées dans le code.
+
+### Couleurs par défaut
+
+| Élément | Couleur                        | Justification                                                                                                  |
+| ------- | ------------------------------ | -------------------------------------------------------------------------------------------------------------- |
+| Terrain | `#D9DBDE` (gris clair)         | Évoque un sol de gymnase indoor, neutre : ne fait pas concurrence visuelle aux pastilles colorées des joueurs. |
+| En-but  | `#3D6FB4` (bleu)               | Convention courante en indoor (zones colorées), bon contraste avec le gris du terrain.                         |
+| Lignes  | `#4B4F58` (gris ardoise foncé) | Lisible à la fois sur le gris clair et sur le bleu de l'en-but.                                                |
+
+Ces valeurs sont le **défaut appliqué quand `colors` est absent** d'un `FieldConfig` — jamais codées en dur dans les composants de rendu. Aucune UI de personnalisation n'est prévue pour le MVP (voir `docs/ROADMAP.md`, post-MVP), mais le modèle de données la supporte dès maintenant : changer les couleurs d'une action ne nécessite aucune migration de schéma.
 
 ## 2. Entités (`Entity`)
 

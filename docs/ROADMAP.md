@@ -12,12 +12,12 @@ Convention : cocher une case au fur et à mesure de l'avancement. Si une tâche 
 - [x] Config `vite.config.ts` avec `base: '/ultimate-playbook/'`.
 - [x] Workflow GitHub Actions : build + déploiement sur GitHub Pages au push sur `main`.
 - [x] i18n : structure `src/i18n/fr.json` avec quelques clés de test, langue par défaut FR.
-- [x] Page d'accueil minimale ("Ultimate Playbook" + placeholder) qui build et déploie correctement, pour valider toute la chaîne avant d'attaquer les features. *(déployée : https://ludodem.github.io/ultimate-playbook/)*
+- [x] Page d'accueil minimale ("Ultimate Playbook" + placeholder) qui build et déploie correctement, pour valider toute la chaîne avant d'attaquer les features. _(déployée : https://ludodem.github.io/ultimate-playbook/)_
 
 ## Phase 1 — Modèle de données & presets
 
-- [ ] Implémenter les types TS de `docs/DATA_MODEL.md` (`FieldConfig`, `Entity`, `Frame`, `Disc`, `Action`).
-- [ ] Implémenter les presets de terrain (`half`, `full`, `undefined`) avec valeurs par défaut indoor.
+- [ ] Implémenter les types TS de `docs/DATA_MODEL.md` (`FieldConfig`, `FieldColors`, `Entity`, `Frame`, `Disc`, `Action`).
+- [ ] Implémenter les presets de terrain (`half`, `full`, `undefined`) avec valeurs par défaut indoor + `DEFAULT_FIELD_COLORS` (gris terrain / bleu en-but / gris ardoise pour les lignes) et une fonction `resolveFieldColors` (fallback si `colors` absent).
 - [ ] Implémenter les presets d'effectif : `empty`, `5v5-vertical-stack`, `5v5-horizontal-stack`.
 - [ ] Tests unitaires sur les presets (nombre d'entités générées, cohérence des positions dans [0,100]).
 
@@ -84,4 +84,5 @@ Fait partie du périmètre MVP (voir `docs/PRD.md` §4.5) mais s'implémente com
 - Partage en lecture seule via lien (nécessite un backend, ex. Supabase).
 - Annotations libres façon "télé-strator" (flèches/zones à main levée).
 - Trajectoires courbes pour les **déplacements de joueurs** (le mécanisme `incomingCurves` est déjà générique, cf. `docs/DATA_MODEL.md` §8 — seule l'UI d'édition pour les joueurs reste à faire ; la trajectoire courbe du disque est en Phase 6, dans le MVP).
+- Personnalisation des couleurs du terrain via l'UI (le modèle de données le permet déjà par défaut, cf. `FieldConfig.colors`).
 - PWA (installable, utilisable hors-ligne) — pertinent tôt vu l'usage "bord de terrain", à réévaluer en priorité juste après le MVP plutôt qu'en fin de liste.

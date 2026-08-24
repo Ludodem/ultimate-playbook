@@ -24,7 +24,7 @@ ultimate-playbook/
 ├── src/
 │   ├── domain/                # modèles TS + logique pure (pas de dépendance React)
 │   │   ├── models.ts          # Action, Frame, Entity, FieldConfig, Disc...
-│   │   ├── presets/            # générateurs de frames initiales (5v5 stack V/H, empty...)
+│   │   ├── presets/            # terrain (dimensions + couleurs par défaut) et effectif (5v5 stack V/H, empty...)
 │   │   └── interpolation.ts   # calcul des positions interpolées entre 2 frames
 │   ├── state/                 # stores Zustand
 │   │   ├── actionEditorStore.ts
@@ -47,7 +47,7 @@ ultimate-playbook/
 ## 3. Rendu du terrain (approche technique)
 
 - Un `Stage` Konva dimensionné via un conteneur responsive (observation du `ResizeObserver` du parent), qui calcule un ratio pixels/pourcentage à chaque redimensionnement.
-- Le terrain (lignes, en-buts) est dessiné à partir de `FieldConfig` (proportions, pas de valeurs en dur).
+- Le terrain (lignes, en-buts) est dessiné à partir de `FieldConfig` (proportions **et couleurs**, jamais de valeurs en dur dans les composants) : `resolveFieldColors(config.colors)` retourne les couleurs personnalisées si présentes, sinon `DEFAULT_FIELD_COLORS` (gris terrain / bleu en-but / gris ardoise pour les lignes — voir `docs/DATA_MODEL.md`).
 - Chaque `Entity` est un `Circle` Konva draggable ; le `Disc` un `Circle` plus petit, draggable seulement si non lié à un joueur (`heldBy` absent).
 - Les flèches de trajectoire (mode lecture) sont calculées à partir de deux frames consécutives : ligne droite au MVP (voir PRD, courbes bézier en post-MVP).
 
@@ -78,3 +78,4 @@ ultimate-playbook/
 - **2026-08-24** — Konva/react-konva retenu plutôt que SVG "à la main" ou Canvas brut : gère drag & drop, tactile et animation nativement, évite de réimplémenter ces briques.
 - **2026-08-24** — Pas de backend au MVP : persistance locale + export/import JSON, pour rester déployable en statique pur (GitHub Pages) et utilisable hors-ligne.
 - **2026-08-24** — Trajectoire courbe du disque intégrée au périmètre MVP (déplacée depuis le hors-scope), modélisée par un point de contrôle de Bézier quadratique par segment plutôt qu'une cubique ou un dessin libre : la contrainte "facile à éditer" prime, et un seul point réutilise l'interaction de drag déjà présente sur les entités. Structure générique (`incomingCurves`, cf. `docs/DATA_MODEL.md` §8) pour pouvoir étendre aux joueurs plus tard sans migration. Implémentation isolée en Phase 6 de `docs/ROADMAP.md`, indépendante du reste du MVP.
+- **2026-08-24** — Couleurs par défaut du terrain fixées à gris (`#D9DBDE`) + bleu en-but (`#3D6FB4`) + lignes gris ardoise (`#4B4F58`) : neutre pour le terrain (ne concurrence pas les entités colorées), convention indoor pour l'en-but. Stockées comme un objet `colors?` optionnel sur `FieldConfig` avec fallback vers `DEFAULT_FIELD_COLORS`, pour rester configurables sans changement de schéma même si l'UI de personnalisation n'arrive qu'après le MVP.

@@ -35,6 +35,8 @@ Presets sélectionnables :
 
 Les dimensions doivent avoir des valeurs par défaut adaptées à l'**indoor** mais rester des paramètres modifiables (pas de valeurs codées en dur non configurables).
 
+Couleurs par défaut : terrain en **gris** (neutre, façon sol de gymnase, ne concurrence pas visuellement les joueurs), en-but en **bleu**. Valeurs exactes et rationale dans `docs/DATA_MODEL.md` (section couleurs). Pas d'UI de personnalisation au MVP, mais le modèle de données est conçu pour rendre ça configurable sans migration future.
+
 ### 4.2 Configuration de l'effectif
 
 - Preset par défaut : **5v5** (5 attaquants / 5 défenseurs).
