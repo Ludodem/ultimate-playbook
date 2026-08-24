@@ -49,14 +49,25 @@ Convention : cocher une case au fur et à mesure de l'avancement. Si une tâche 
 - [ ] Mode "fluide" : lecture animée avec `requestAnimationFrame`, vitesse réglable.
 - [ ] Affichage des flèches de trajectoire entre deux frames consécutives (distinction course de joueur / passe de disque).
 
-## Phase 6 — Persistance locale
+## Phase 6 — Trajectoire courbe du disque
+
+Fait partie du périmètre MVP (voir `docs/PRD.md` §4.5) mais s'implémente comme une couche indépendante par-dessus la Phase 5 : le MVP reste pleinement fonctionnel (en ligne droite) sans cette phase, elle peut donc être livrée séparément/plus tard sans bloquer le reste.
+
+- [ ] Étendre le modèle `Frame` avec `incomingCurves` (voir `docs/DATA_MODEL.md` §8).
+- [ ] Fonctions pures `lerp` et `quadraticBezier` dans `src/domain/interpolation.ts` + tests unitaires, et bascule de `interpolate` entre les deux selon la présence d'une entrée `incomingCurves` pour l'entité/le disque concerné.
+- [ ] UI d'édition : affichage du disque "fantôme" de la frame précédente relié par une ligne pointillée à sa position sur la frame courante, avec une poignée de contrôle draggable au milieu (identique à l'interaction de déplacement d'une entité).
+- [ ] L'affordance de courbure n'apparaît que si la position du disque change réellement entre les deux frames.
+- [ ] Bouton de réinitialisation ("trajectoire rectiligne") qui supprime l'entrée `incomingCurves.disc`.
+- [ ] Mise à jour du rendu des flèches de trajectoire (mode lecture) pour dessiner la courbe réelle (Bézier) plutôt qu'une ligne droite quand un point de contrôle est défini.
+
+## Phase 7 — Persistance locale
 
 - [ ] `libraryStore` : sauvegarde/chargement des actions en localStorage (clé namespacée, voir `docs/DATA_MODEL.md` §6).
 - [ ] Export d'une action en fichier JSON téléchargeable.
 - [ ] Import d'un fichier JSON avec validation de schéma (`schemaVersion`, champs obligatoires) et message d'erreur clair si invalide.
 - [ ] Test de non-régression : créer une action, recharger la page, vérifier qu'elle est toujours présente.
 
-## Phase 7 — Responsive & polish tactile
+## Phase 8 — Responsive & polish tactile
 
 - [ ] Vérification et ajustement de l'UI sur les trois formats cibles (PC, tablette, smartphone).
 - [ ] Tailles de cibles tactiles suffisantes (boutons, poignées de drag).
@@ -72,5 +83,5 @@ Convention : cocher une case au fur et à mesure de l'avancement. Si une tâche 
 - Export PNG/PDF d'une frame ou de l'action complète ; export GIF/vidéo de l'animation.
 - Partage en lecture seule via lien (nécessite un backend, ex. Supabase).
 - Annotations libres façon "télé-strator" (flèches/zones à main levée).
-- Trajectoires courbes (bézier) entre frames, au lieu de la ligne droite du MVP.
+- Trajectoires courbes pour les **déplacements de joueurs** (le mécanisme `incomingCurves` est déjà générique, cf. `docs/DATA_MODEL.md` §8 — seule l'UI d'édition pour les joueurs reste à faire ; la trajectoire courbe du disque est en Phase 6, dans le MVP).
 - PWA (installable, utilisable hors-ligne) — pertinent tôt vu l'usage "bord de terrain", à réévaluer en priorité juste après le MVP plutôt qu'en fin de liste.

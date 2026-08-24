@@ -59,12 +59,19 @@ Les dimensions doivent avoir des valeurs par défaut adaptées à l'**indoor** m
 - **Fluide** : animation continue interpolant les positions entre chaque paire de frames consécutives, avec vitesse réglable.
 - Affichage des flèches de déplacement entre deux frames consécutives (trajectoire de chaque joueur, distinction visuelle passe de disque / course de joueur).
 
-### 4.5 Persistance
+### 4.5 Trajectoire courbe du disque
+
+- Sur une transition donnée (entre une frame et la suivante), possibilité de définir explicitement une trajectoire **courbe** du disque plutôt que la ligne droite par défaut — cas d'usage : blade, hammer, huck avec un arc prononcé.
+- Édition via un unique point de contrôle draggable (courbe de Bézier quadratique), affiché sur le segment concerné, avec la même interaction que le déplacement d'une entité. Un bouton permet de revenir à une trajectoire rectiligne.
+- L'affordance d'édition n'apparaît que sur les transitions où la position du disque change réellement.
+- Cette fonctionnalité fait partie du périmètre MVP mais n'est pas bloquante pour livrer une première version : elle peut être implémentée après le reste de l'éditeur/lecteur en mode "ligne droite" (voir `docs/ROADMAP.md`, Phase 6). Voir `docs/DATA_MODEL.md` §8 pour le détail du modèle.
+
+### 4.6 Persistance
 
 - Sauvegarde locale des actions créées (localStorage/IndexedDB), sans compte utilisateur.
 - Export d'une action en fichier JSON (partage manuel) et import d'un fichier JSON.
 
-### 4.6 Responsive & i18n
+### 4.7 Responsive & i18n
 
 - Interface utilisable sur PC, tablette, smartphone (adaptation de la mise en page et des zones tactiles).
 - Structure d'internationalisation en place dès le MVP ; contenu complet en **français**, l'anglais n'est pas nécessairement traduit au MVP (le français reste la langue de repli).
@@ -76,7 +83,7 @@ Les dimensions doivent avoir des valeurs par défaut adaptées à l'**indoor** m
 - Export image/PDF/GIF/vidéo d'une action.
 - Mode présentation plein écran (déroulé de plusieurs actions).
 - Annotations libres façon "télé-strator" (flèches/zones dessinées à main levée).
-- Trajectoires courbes (bézier) entre frames — le MVP interpole en ligne droite.
+- Trajectoires courbes pour les **déplacements de joueurs** (le mécanisme de point de contrôle est déjà générique dans le modèle de données, cf. `docs/DATA_MODEL.md` §8 — seule l'UI d'édition pour les joueurs reste hors-scope). La trajectoire courbe du **disque**, elle, fait partie du MVP (§4.5).
 
 ## 6. Non-objectifs explicites
 

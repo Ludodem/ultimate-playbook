@@ -55,6 +55,10 @@ ultimate-playbook/
 
 - Fonction pure `interpolate(frameA, frameB, t: number): Frame` dans `src/domain/interpolation.ts`, indépendante de React/Konva → testable unitairement.
 - Le contrôleur de lecture pilote `t` via `requestAnimationFrame`, en respectant `transitionMs` (par frame) et `speedMultiplier`.
+- Pour chaque entité/disque du segment, `interpolate` choisit entre deux fonctions selon la présence d'une entrée dans `frameB.incomingCurves` (voir `docs/DATA_MODEL.md` §8) :
+  - `lerp(p0, p1, t)` — comportement par défaut, ligne droite.
+  - `quadraticBezier(p0, controlPoint, p1, t)` — utilisée uniquement pour l'entité/le disque concerné par une entrée `incomingCurves`, sans affecter les autres entités du même segment.
+- Ces deux fonctions vivent aussi dans `src/domain/interpolation.ts`, pures et testées indépendamment.
 
 ## 5. Persistance
 
@@ -73,3 +77,4 @@ ultimate-playbook/
 - **2026-08-24** — Choix du modèle d'action par **keyframes/snapshots** plutôt qu'un mode "enregistrement" en temps réel : plus simple à éditer, correspond nativement au besoin de lecture pas-à-pas, et rend l'interpolation fluide triviale à calculer.
 - **2026-08-24** — Konva/react-konva retenu plutôt que SVG "à la main" ou Canvas brut : gère drag & drop, tactile et animation nativement, évite de réimplémenter ces briques.
 - **2026-08-24** — Pas de backend au MVP : persistance locale + export/import JSON, pour rester déployable en statique pur (GitHub Pages) et utilisable hors-ligne.
+- **2026-08-24** — Trajectoire courbe du disque intégrée au périmètre MVP (déplacée depuis le hors-scope), modélisée par un point de contrôle de Bézier quadratique par segment plutôt qu'une cubique ou un dessin libre : la contrainte "facile à éditer" prime, et un seul point réutilise l'interaction de drag déjà présente sur les entités. Structure générique (`incomingCurves`, cf. `docs/DATA_MODEL.md` §8) pour pouvoir étendre aux joueurs plus tard sans migration. Implémentation isolée en Phase 6 de `docs/ROADMAP.md`, indépendante du reste du MVP.

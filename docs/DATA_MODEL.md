@@ -61,6 +61,7 @@ interface Frame {
   transitionMs?: number;   // durée de l'interpolation DEPUIS la frame précédente en mode "fluide" (défaut si absent : valeur globale de l'action)
   entities: Entity[];
   disc: Disc;
+  incomingCurves?: IncomingCurves; // courbure optionnelle du/des segment(s) arrivant depuis la frame précédente — voir §8
 }
 ```
 
@@ -109,3 +110,34 @@ interface PlaybackState {
   speedMultiplier: number; // ex: 1 = vitesse normale, 0.5 = deux fois plus lent
 }
 ```
+
+## 8. Courbure de trajectoire (segments)
+
+Par défaut, un segment (transition entre deux frames consécutives) est interpolé en **ligne droite** en mode "fluide". Pour certains cas (un lancer courbe — blade, hammer, huck avec arc), on veut pouvoir définir explicitement une trajectoire courbe **sur ce segment précis**, sans que ça affecte les autres segments de l'action.
+
+### Principe
+
+- La courbure est une propriété de la **transition**, pas d'une frame isolée : elle décrit comment on va de la position à la frame N à la position à la frame N+1. On la stocke sur la frame d'arrivée (N+1), par cohérence avec `transitionMs` qui suit déjà cette convention.
+- Modélisée par une courbe de **Bézier quadratique à un seul point de contrôle** — suffisant pour l'immense majorité des trajectoires réelles (une seule inflexion), et surtout beaucoup plus simple à éditer qu'une cubique à deux poignées : l'interaction reste "glisser un point", identique au déplacement d'une entité.
+- Le champ est une map générique par id d'entité (clé spéciale `"disc"` pour le disque), pour pouvoir réutiliser exactement le même mécanisme plus tard sur des courses de joueurs (item post-MVP, cf. `docs/PRD.md` §5) sans changer le schéma.
+
+```ts
+interface CurveControlPoint {
+  x: number; // 0-100, coordonnées relatives comme toutes les positions du modèle
+  y: number;
+}
+
+type IncomingCurves = Record<string /* id d'entité, ou "disc" */, CurveControlPoint>;
+```
+
+- Absence d'entrée pour une clé donnée = interpolation en ligne droite (comportement inchangé).
+- **MVP** : seule la clé `"disc"` est exposée dans l'UI d'édition (voir `docs/PRD.md` §4.5). Le mécanisme pour les entités/joueurs existe dans le modèle mais reste sans UI tant que ce n'est pas priorisé.
+- L'affordance d'édition ne doit être proposée que lorsque la position du disque diffère réellement entre la frame N et la frame N+1 (sinon rien à courber).
+
+### Impact sur l'interpolation
+
+En mode "fluide", pour chaque segment et chaque entité/disque :
+- pas d'entrée dans `incomingCurves` → interpolation linéaire (`lerp`), comportement actuel.
+- entrée présente → `quadraticBezier(P0, controlPoint, P1, t)` à la place du `lerp`, uniquement pour cette entité/le disque sur ce segment (voir `docs/ARCHITECTURE.md` §4).
+
+Le mode "pas à pas" n'est pas concerné : il n'affiche que les positions aux frames, jamais l'intérieur d'un segment.
