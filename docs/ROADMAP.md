@@ -16,10 +16,10 @@ Convention : cocher une case au fur et à mesure de l'avancement. Si une tâche 
 
 ## Phase 1 — Modèle de données & presets
 
-- [ ] Implémenter les types TS de `docs/DATA_MODEL.md` (`FieldConfig`, `FieldColors`, `Entity`, `Frame`, `Disc`, `Action`).
-- [ ] Implémenter les presets de terrain (`half`, `full`, `undefined`) avec valeurs par défaut indoor + `DEFAULT_FIELD_COLORS` (gris terrain / bleu en-but / gris ardoise pour les lignes) et une fonction `resolveFieldColors` (fallback si `colors` absent).
-- [ ] Implémenter les presets d'effectif : `empty`, `5v5-vertical-stack`, `5v5-horizontal-stack`.
-- [ ] Tests unitaires sur les presets (nombre d'entités générées, cohérence des positions dans [0,100]).
+- [x] Implémenter les types TS de `docs/DATA_MODEL.md` (`FieldConfig`, `FieldColors`, `Entity`, `Frame`, `Disc`, `Action`) — `src/domain/models.ts`.
+- [x] Implémenter les presets de terrain (`half`, `full`, `undefined`) avec valeurs par défaut indoor + `DEFAULT_FIELD_COLORS` (gris terrain / bleu en-but / gris ardoise pour les lignes) et une fonction `resolveFieldColors` (fallback si `colors` absent) — `src/domain/presets/field.ts` et `fieldColors.ts`.
+- [x] Implémenter les presets d'effectif : `empty`, `5v5-vertical-stack`, `5v5-horizontal-stack` — `src/domain/presets/roster.ts`.
+- [x] Tests unitaires sur les presets (nombre d'entités générées, cohérence des positions dans [0,100]).
 
 ## Phase 2 — Rendu statique du terrain
 
