@@ -1,3 +1,4 @@
+import type Konva from "konva";
 import { useEffect, useRef, useState } from "react";
 import { Layer, Line, Rect, Stage } from "react-konva";
 import {
@@ -10,9 +11,24 @@ import { resolveFieldColors } from "../../domain/presets/fieldColors";
 import { DiscMarker } from "./DiscMarker";
 import { EntityMarker } from "./EntityMarker";
 
+/**
+ * Callbacks d'édition (Phase 3, `docs/ROADMAP.md`). Absent = rendu statique
+ * (comportement de la Phase 2, utilisé plus tard aussi par le mode lecture).
+ */
+export interface FieldInteractive {
+  selectedEntityId: string | null;
+  onEntitySelect: (id: string) => void;
+  onEntityMove: (id: string, x: number, y: number) => void;
+  onDiscMove: (x: number, y: number) => void;
+  /** Clic/tap sur une zone vide du terrain (coordonnées en %) — sert au mode
+   * "sélectionner puis taper la destination" en plus du drag classique. */
+  onFieldClick: (x: number, y: number) => void;
+}
+
 interface FieldProps {
   fieldConfig: FieldConfig;
   frame: Frame;
+  interactive?: FieldInteractive;
 }
 
 // Proportions des marqueurs relatives à la largeur *en jeu* du terrain (pas à
@@ -29,7 +45,7 @@ const LINE_WIDTH = 2;
  * Gère la marge sideline (`FieldConfig.sidelineMarginMeters`) : la plage rendue
  * sur l'axe largeur peut dépasser [0,100], voir docs/DATA_MODEL.md.
  */
-export function Field({ fieldConfig, frame }: FieldProps) {
+export function Field({ fieldConfig, frame, interactive }: FieldProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);
 
@@ -53,15 +69,23 @@ export function Field({ fieldConfig, frame }: FieldProps) {
   const colors = resolveFieldColors(fieldConfig.colors);
   const toX = (percent: number) => ((percent - range.min) / rangeSpanPercent) * width;
   const toY = (percent: number) => (percent / 100) * height;
+  const fromX = (px: number) => range.min + (px / width) * rangeSpanPercent;
+  const fromY = (py: number) => (py / height) * 100;
   const entityRadius = fieldWidthPx * ENTITY_RADIUS_RATIO;
   const discRadius = fieldWidthPx * DISC_RADIUS_RATIO;
   const fieldLeft = toX(0);
   const fieldRight = toX(100);
 
+  const handleStageClick = (e: Konva.KonvaEventObject<Event>) => {
+    if (!interactive) return;
+    const pos = e.target.getStage()?.getPointerPosition();
+    if (pos) interactive.onFieldClick(fromX(pos.x), fromY(pos.y));
+  };
+
   return (
     <div ref={containerRef} style={{ width: "100%" }}>
       {width > 0 && height > 0 && (
-        <Stage width={width} height={height}>
+        <Stage width={width} height={height} onClick={handleStageClick} onTap={handleStageClick}>
           <Layer>
             {/* Fond hors-ligne : recouvert par le rectangle terrain ci-dessous quand aucune marge n'est réservée. */}
             <Rect x={0} y={0} width={width} height={height} fill={colors.outOfBounds} />
@@ -111,6 +135,14 @@ export function Field({ fieldConfig, frame }: FieldProps) {
                 cx={toX(entity.x)}
                 cy={toY(entity.y)}
                 radius={entityRadius}
+                isSelected={interactive?.selectedEntityId === entity.id}
+                draggable={Boolean(interactive)}
+                onSelect={interactive ? () => interactive.onEntitySelect(entity.id) : undefined}
+                onDragEnd={
+                  interactive
+                    ? (px, py) => interactive.onEntityMove(entity.id, fromX(px), fromY(py))
+                    : undefined
+                }
               />
             ))}
 
@@ -121,6 +153,10 @@ export function Field({ fieldConfig, frame }: FieldProps) {
               toY={toY}
               radius={discRadius}
               heldOffset={entityRadius}
+              draggable={Boolean(interactive)}
+              onDragEnd={
+                interactive ? (px, py) => interactive.onDiscMove(fromX(px), fromY(py)) : undefined
+              }
             />
           </Layer>
         </Stage>

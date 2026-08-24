@@ -15,3 +15,7 @@ export const ENTITY_LABEL_COLOR = "#FFFFFF";
 
 export const DISC_FILL_COLOR = "#F5F0E6"; // crème, évoque un vrai disque
 export const DISC_STROKE_COLOR = "#4B4F58"; // même gris ardoise que les lignes du terrain
+
+/** Contour d'une entité sélectionnée en mode édition (Phase 3). Jaune, ne rentre
+ * en conflit avec aucune autre couleur du thème (orange/violet/gris/bleu/crème). */
+export const SELECTION_STROKE_COLOR = "#F2C94C";

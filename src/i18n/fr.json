@@ -3,7 +3,31 @@
     "title": "Ultimate Playbook",
     "tagline": "Éditez et rejouez vos actions d'Ultimate Frisbee"
   },
-  "home": {
-    "placeholder": "L'éditeur de terrain arrive bientôt."
+  "editor": {
+    "setup": {
+      "title": "Nouvelle action",
+      "fieldType": "Terrain",
+      "fieldTypeHalf": "Demi-terrain",
+      "fieldTypeFull": "Terrain complet",
+      "fieldTypeUndefined": "Terrain indéfini",
+      "sidelineMargin": "Réserver une marge sideline (plays \"longue ligne\")",
+      "roster": "Effectif de départ",
+      "rosterEmpty": "Vide",
+      "rosterVertical": "5v5 — Stack vertical",
+      "rosterHorizontal": "5v5 — Stack horizontal",
+      "start": "Commencer"
+    },
+    "toolbar": {
+      "addOffense": "+ Attaque",
+      "addDefense": "+ Défense",
+      "undo": "Annuler",
+      "redo": "Rétablir",
+      "rosterWarning": "Effectif élevé : l'affichage peut devenir difficile à lire au-delà de {{max}} joueurs par équipe.",
+      "giveDisc": "🥏 Donner le disque",
+      "freeDisc": "Libérer le disque",
+      "remove": "Supprimer",
+      "deselect": "Désélectionner",
+      "selectionHint": "Astuce : sélectionnez un joueur puis tapez sur le terrain pour le déplacer, en plus du glisser-déposer."
+    }
   }
 }

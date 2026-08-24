@@ -29,12 +29,13 @@ Convention : cocher une case au fur et à mesure de l'avancement. Si une tâche 
 
 ## Phase 3 — Édition des positions
 
-- [ ] Écran/panneau de démarrage d'une nouvelle action : choix du preset terrain (`half`/`full`/`undefined`, toggle marge sideline) et du preset d'effectif (`empty`/`5v5-vertical-stack`/`5v5-horizontal-stack`).
-- [ ] Drag & drop d'une entité (souris + tactile via pointer events), mise à jour du store.
-- [ ] Ajout / suppression d'une entité (choix de l'équipe), sans limite basse, avertissement au-delà du seuil haut recommandé.
-- [ ] Sélection du porteur du disque (assignation `heldBy`) ou position libre du disque.
-- [ ] Undo/redo sur les actions d'édition (pile d'historique des frames).
-- [ ] Mode d'interaction alternatif pour petits écrans (sélectionner puis taper la destination, en plus du drag classique).
+- [x] Écran/panneau de démarrage d'une nouvelle action : choix du preset terrain (`half`/`full`/`undefined`, toggle marge sideline) et du preset d'effectif (`empty`/`5v5-vertical-stack`/`5v5-horizontal-stack`) — `src/components/editor/NewActionSetup.tsx`.
+- [x] Drag & drop d'une entité (souris + tactile via pointer events Konva), mise à jour du store — `src/state/actionEditorStore.ts` (Zustand), câblé dans `Field.tsx` via la prop `interactive`.
+- [x] Ajout / suppression d'une entité (choix de l'équipe), sans limite basse, avertissement au-delà du seuil haut recommandé (`MAX_RECOMMENDED_PER_TEAM = 15`) — `PositionEditor.tsx`.
+- [x] Sélection du porteur du disque (assignation `heldBy`) ou position libre du disque (`assignDiscTo`/`freeDisc`).
+- [x] Undo/redo sur les actions d'édition (pile d'historique des frames) — `past`/`future` dans le store.
+- [x] Mode d'interaction alternatif pour petits écrans : sélectionner un joueur (clic/tap) puis taper une destination sur le terrain, en plus du drag classique — les deux coexistent plutôt qu'un bascule de mode.
+- Validation : 33 tests unitaires (store + domaine) + parcours interactif vérifié via un script Playwright piloté (sélection, tap-to-move, ajout, drag souris, undo/redo x2, redo) — captures conformes, aucune erreur console.
 
 ## Phase 4 — Gestion des frames & branches (timeline)
 

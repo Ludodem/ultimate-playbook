@@ -1,3 +1,4 @@
+import type Konva from "konva";
 import { Circle } from "react-konva";
 import { resolveDiscPosition } from "../../domain/disc";
 import type { Disc, Entity } from "../../domain/models";
@@ -12,9 +13,21 @@ interface DiscMarkerProps {
   /** Rayon (px) de l'entité porteuse, pour décaler visuellement le disque quand
    * il est en main — sinon il recouvre entièrement le label du joueur. */
   heldOffset: number;
+  /** Présent seulement en mode édition ; le disque n'est draggable que libre (non tenu). */
+  draggable?: boolean;
+  onDragEnd?: (px: number, py: number) => void;
 }
 
-export function DiscMarker({ disc, entities, toX, toY, radius, heldOffset }: DiscMarkerProps) {
+export function DiscMarker({
+  disc,
+  entities,
+  toX,
+  toY,
+  radius,
+  heldOffset,
+  draggable = false,
+  onDragEnd,
+}: DiscMarkerProps) {
   const position = resolveDiscPosition(disc, entities);
   if (!position) return null;
 
@@ -22,6 +35,11 @@ export function DiscMarker({ disc, entities, toX, toY, radius, heldOffset }: Dis
   // logique du disque, utilisée pour l'interpolation, reste celle du porteur
   // (voir resolveDiscPosition / docs/DATA_MODEL.md).
   const offset = disc.heldBy ? heldOffset * 0.9 : 0;
+  const canDrag = draggable && !disc.heldBy;
+
+  const handleDragEnd = (e: Konva.KonvaEventObject<DragEvent>) => {
+    onDragEnd?.(e.target.x(), e.target.y());
+  };
 
   return (
     <Circle
@@ -31,6 +49,8 @@ export function DiscMarker({ disc, entities, toX, toY, radius, heldOffset }: Dis
       fill={DISC_FILL_COLOR}
       stroke={DISC_STROKE_COLOR}
       strokeWidth={1.5}
+      draggable={canDrag}
+      onDragEnd={canDrag ? handleDragEnd : undefined}
     />
   );
 }
