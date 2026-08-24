@@ -31,7 +31,7 @@ Déployé automatiquement sur GitHub Pages à chaque push sur `main` (voir `.git
 
 ## État du projet
 
-✅ **Phase 0 (bootstrap technique)** et **Phase 1 (modèle de données & presets)** terminées. 🚧 Prochaine étape : Phase 2 (rendu statique du terrain) — voir `docs/ROADMAP.md`.
+✅ **Phase 0, 1 et 2** terminées (bootstrap, modèle de données, rendu statique du terrain). 🚧 Prochaine étape : Phase 3 (édition des positions) — voir `docs/ROADMAP.md`.
 
 ## Licence
 

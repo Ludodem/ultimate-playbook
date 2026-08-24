@@ -23,9 +23,9 @@ Convention : cocher une case au fur et à mesure de l'avancement. Si une tâche 
 
 ## Phase 2 — Rendu statique du terrain
 
-- [ ] Composant `Field` (Konva Stage/Layer) qui dessine le terrain selon `FieldConfig` (lignes, en-buts si applicable), responsive (resize observer).
-- [ ] Rendu des entités (cercles colorés par équipe, label) et du disque depuis une `Frame` statique passée en props.
-- [ ] Validation manuelle : afficher un preset 5v5 stack vertical sur PC + émulateur mobile/tablette.
+- [x] Composant `Field` (Konva Stage/Layer) qui dessine le terrain selon `FieldConfig` (lignes, en-buts si applicable), responsive (resize observer) — `src/components/field/Field.tsx`.
+- [x] Rendu des entités (cercles colorés par équipe, label) et du disque depuis une `Frame` statique passée en props — `EntityMarker.tsx` / `DiscMarker.tsx`.
+- [x] Validation manuelle : affiché un preset 5v5 stack vertical sur PC (1280px) et mobile étroit (390px) via Playwright — capture d'écran conforme (gris/bleu, orange/violet, disque bien distinct, aucun chevauchement). Ajustements apportés suite à cette validation : espacement des presets d'effectif (`roster.ts`) et décalage visuel du disque quand il est en main (pour ne pas masquer le label du porteur).
 
 ## Phase 3 — Édition des positions
 

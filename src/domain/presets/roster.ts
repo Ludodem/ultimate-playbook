@@ -38,18 +38,24 @@ function discOnHolder(entities: Entity[]): Disc {
  * marquage individuel simple (léger décalage vers le large côté force).
  * Coordonnées indicatives, ajustables librement par le coach une fois placées.
  */
+// Décalage appliqué à chaque défenseur par rapport à l'attaquant qu'il marque :
+// suffisamment grand pour qu'aucune paire non appariée ne se chevauche (les
+// pastilles font ~7-8% de la largeur du terrain de diamètre à l'écran).
+const MARK_DX = 14;
+const MARK_DY = -3;
+
 export function fiveVFiveVerticalStackPreset(): RosterPreset {
   const entities: Entity[] = [
-    entity("offense", "H1", 50, 85, true),
-    entity("offense", "H2", 35, 90),
+    entity("offense", "H1", 50, 80, true),
+    entity("offense", "H2", 30, 92),
     entity("offense", "1", 50, 55),
-    entity("offense", "2", 50, 45),
-    entity("offense", "3", 50, 35),
-    entity("defense", "D1", 56, 85),
-    entity("defense", "D2", 41, 90),
-    entity("defense", "D3", 56, 55),
-    entity("defense", "D4", 56, 45),
-    entity("defense", "D5", 56, 35),
+    entity("offense", "2", 50, 43),
+    entity("offense", "3", 50, 31),
+    entity("defense", "D1", 50 + MARK_DX, 80 + MARK_DY),
+    entity("defense", "D2", 30 + MARK_DX, 92 + MARK_DY),
+    entity("defense", "D3", 50 + MARK_DX, 55 + MARK_DY),
+    entity("defense", "D4", 50 + MARK_DX, 43 + MARK_DY),
+    entity("defense", "D5", 50 + MARK_DX, 31 + MARK_DY),
   ];
   return { entities, disc: discOnHolder(entities) };
 }
@@ -59,16 +65,16 @@ export function fiveVFiveVerticalStackPreset(): RosterPreset {
  */
 export function fiveVFiveHorizontalStackPreset(): RosterPreset {
   const entities: Entity[] = [
-    entity("offense", "H1", 50, 85, true),
-    entity("offense", "H2", 35, 90),
+    entity("offense", "H1", 50, 80, true),
+    entity("offense", "H2", 30, 92),
     entity("offense", "1", 25, 55),
     entity("offense", "2", 50, 55),
     entity("offense", "3", 75, 55),
-    entity("defense", "D1", 56, 85),
-    entity("defense", "D2", 41, 90),
-    entity("defense", "D3", 31, 55),
-    entity("defense", "D4", 56, 55),
-    entity("defense", "D5", 81, 55),
+    entity("defense", "D1", 50 + MARK_DX, 80 + MARK_DY),
+    entity("defense", "D2", 30 + MARK_DX, 92 + MARK_DY),
+    entity("defense", "D3", 25 + MARK_DX, 55 + MARK_DY),
+    entity("defense", "D4", 50 + MARK_DX, 55 + MARK_DY),
+    entity("defense", "D5", 75 + MARK_DX, 55 + MARK_DY),
   ];
   return { entities, disc: discOnHolder(entities) };
 }
