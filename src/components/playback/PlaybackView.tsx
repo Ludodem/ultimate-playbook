@@ -11,7 +11,7 @@ export function PlaybackView() {
   const [mode, setMode] = useState<PlaybackMode>("step");
 
   return (
-    <div>
+    <div className="playback-view">
       <div className="playback-mode-switch">
         <button type="button" onClick={() => setMode("step")} disabled={mode === "step"}>
           {t("playback.mode.step")}

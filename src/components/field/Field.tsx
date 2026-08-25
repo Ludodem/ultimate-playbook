@@ -77,7 +77,7 @@ export function Field({
   ghostFrame,
 }: FieldProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [width, setWidth] = useState(0);
+  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const [dragState, setDragState] = useState<{ entityId: string; isOverTrash: boolean } | null>(
     null,
   );
@@ -88,7 +88,9 @@ export function Field({
 
     const observer = new ResizeObserver((entries) => {
       const entry = entries[0];
-      if (entry) setWidth(entry.contentRect.width);
+      if (entry) {
+        setContainerSize({ width: entry.contentRect.width, height: entry.contentRect.height });
+      }
     });
     observer.observe(container);
     return () => observer.disconnect();
@@ -100,7 +102,24 @@ export function Field({
   // marge soit active ou non — ni le terrain ni les entités ne rétrécissent.
   const range = computeVisibleXRangePercent(fieldConfig);
   const rangeSpanPercent = range.max - range.min;
-  const height = width * (fieldConfig.lengthMeters / fieldConfig.widthMeters);
+
+  // Le terrain occupe l'espace disponible en largeur OU en hauteur — celle
+  // des deux qui est la plus contraignante (comme `object-fit: contain`) —
+  // plutôt que de systématiquement dériver la hauteur de la largeur : sur
+  // mobile portrait, la hauteur disponible (une fois le reste de l'UI décompté)
+  // est souvent plus limitante que la largeur, voir docs/ARCHITECTURE.md §8.
+  // Si le conteneur n'a pas de hauteur définie par son parent (mesure initiale
+  // à 0, ou mise en page desktop sans contrainte verticale explicite),
+  // `containerSize.height` reste 0 et on retombe sur l'ancien calcul
+  // "dérivé de la largeur uniquement".
+  const aspectRatio = fieldConfig.lengthMeters / fieldConfig.widthMeters;
+  let width = containerSize.width;
+  let height = width * aspectRatio;
+  if (containerSize.height > 0 && height > containerSize.height) {
+    height = containerSize.height;
+    width = height / aspectRatio;
+  }
+
   const colors = resolveFieldColors(fieldConfig.colors);
   const toX = (percent: number) => ((percent - range.min) / rangeSpanPercent) * width;
   const toY = (percent: number) => (percent / 100) * height;
@@ -125,7 +144,16 @@ export function Field({
   };
 
   return (
-    <div ref={containerRef} style={{ width: "100%" }}>
+    <div
+      ref={containerRef}
+      style={{
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
       {width > 0 && height > 0 && (
         <Stage width={width} height={height} onClick={handleStageClick} onTap={handleStageClick}>
           <Layer>

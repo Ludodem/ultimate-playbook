@@ -132,6 +132,16 @@ export function PositionEditor() {
               {t("editor.toolbar.newAction")}
             </button>
           </div>
+          {previousFrame && (
+            <label className="checkbox-option ghost-toggle">
+              <input
+                type="checkbox"
+                checked={showGhostFrame}
+                onChange={(e) => setShowGhostFrame(e.target.checked)}
+              />
+              {t("editor.toolbar.ghostFrameToggle")}
+            </label>
+          )}
         </div>
       )}
 
@@ -224,20 +234,6 @@ export function PositionEditor() {
               </button>
             </div>
           )}
-
-          <div className="edit-hints">
-            <p className="hint">{t("editor.toolbar.selectionHint")}</p>
-            {previousFrame && (
-              <label className="checkbox-option ghost-toggle">
-                <input
-                  type="checkbox"
-                  checked={showGhostFrame}
-                  onChange={(e) => setShowGhostFrame(e.target.checked)}
-                />
-                {t("editor.toolbar.ghostFrameToggle")}
-              </label>
-            )}
-          </div>
 
           <FrameTimeline />
         </div>

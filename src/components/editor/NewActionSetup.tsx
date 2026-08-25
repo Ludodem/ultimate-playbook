@@ -133,7 +133,7 @@ export function NewActionSetup() {
         ))}
       </fieldset>
 
-      <button type="button" onClick={handleStart}>
+      <button type="button" className="primary" onClick={handleStart}>
         {t("editor.setup.start")}
       </button>
 

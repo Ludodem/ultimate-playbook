@@ -30,7 +30,6 @@
       "rosterWarning": "Effectif élevé : l'affichage peut devenir difficile à lire au-delà de {{max}} joueurs par équipe.",
       "remove": "Supprimer",
       "deselect": "Désélectionner",
-      "selectionHint": "Astuce : sélectionnez un joueur puis tapez sur le terrain pour le déplacer, en plus du glisser-déposer.",
       "ghostFrameToggle": "Afficher la frame précédente en fantôme",
       "export": "⭳ Exporter (JSON)",
       "newAction": "Nouvelle action"
