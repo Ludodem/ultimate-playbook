@@ -140,14 +140,15 @@ body {
   min-height: 0;
 }
 
-/* Bannières contextuelles (avertissement effectif, aide trajectoire courbe) :
-   transitoires (n'apparaissent que quand c'est pertinent), donc tolérées en
-   overlay flouté — contrairement à un panneau permanent, rien n'est jamais
-   durablement inatteignable en dessous. Marge latérale pour ne jamais passer
-   sous les pastilles Éditer/Jouer et ⋯. */
+/* Bannières contextuelles (avertissement effectif, aide trajectoire courbe,
+   note de frame en lecture) : transitoires (n'apparaissent que quand c'est
+   pertinent), donc tolérées en overlay flouté — contrairement à un panneau
+   permanent, rien n'est jamais durablement inatteignable en dessous. En haut
+   (édition), marge latérale pour ne jamais passer sous les pastilles
+   Éditer/Jouer et ⋯ ; en bas (lecture), pas de pastille à éviter et rien
+   n'est de toute façon cliquable sur le terrain en mode lecture. */
 .field-banner-stack {
   position: absolute;
-  top: 0.75rem;
   left: 4rem;
   right: 4rem;
   z-index: 20;
@@ -156,6 +157,16 @@ body {
   align-items: center;
   gap: 0.35rem;
   pointer-events: none;
+}
+
+.field-banner-stack-top {
+  top: 0.75rem;
+}
+
+.field-banner-stack-bottom {
+  bottom: 0.75rem;
+  left: 1rem;
+  right: 1rem;
 }
 
 .field-banner {
@@ -434,12 +445,31 @@ button.primary {
   white-space: nowrap;
 }
 
+.frame-row-actions {
+  flex: none;
+  margin-left: auto;
+  display: flex;
+  gap: 0.4rem;
+}
+
+.chip-branch {
+  flex: none;
+  min-height: 44px;
+  padding: 0 0.65rem;
+  border-radius: var(--radius-sm);
+  border: 1px dashed var(--accent);
+  background: transparent;
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
 .chip-add {
   flex: none;
   min-width: 44px;
   min-height: 44px;
   padding: 0;
-  margin-left: auto;
   border-radius: var(--radius-sm);
   border: none;
   background: var(--accent);

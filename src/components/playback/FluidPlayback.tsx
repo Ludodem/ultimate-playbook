@@ -101,6 +101,12 @@ export function FluidPlayback() {
         <div className="field-demo">
           <Field fieldConfig={fieldConfig} frame={displayFrame} />
         </div>
+
+        {displayFrame.note && (
+          <div className="field-banner-stack field-banner-stack-bottom">
+            <p className="frame-note-display field-banner">{displayFrame.note}</p>
+          </div>
+        )}
       </div>
 
       <div className="playback-dock">

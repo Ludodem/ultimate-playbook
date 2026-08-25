@@ -143,7 +143,7 @@ export function PositionEditor() {
             </div>
 
             {(showRosterWarning || discMoved) && (
-              <div className="field-banner-stack">
+              <div className="field-banner-stack field-banner-stack-top">
                 {showRosterWarning && (
                   <p className="warning field-banner">
                     {t("editor.toolbar.rosterWarning", { max: MAX_RECOMMENDED_PER_TEAM })}

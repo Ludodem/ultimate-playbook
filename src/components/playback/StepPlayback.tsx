@@ -73,11 +73,15 @@ export function StepPlayback() {
             nextFrame={!isAnimating && children.length === 1 ? children[0] : undefined}
           />
         </div>
+
+        {displayFrame.note && (
+          <div className="field-banner-stack field-banner-stack-bottom">
+            <p className="frame-note-display field-banner">{displayFrame.note}</p>
+          </div>
+        )}
       </div>
 
       <div className="playback-dock">
-        {currentFrame.note && <p className="frame-note-display">{currentFrame.note}</p>}
-
         {children.length > 1 && (
           <ForkChoice options={children} onChoose={advanceTo} disabled={isAnimating} />
         )}
