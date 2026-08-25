@@ -12,17 +12,24 @@ export function PlaybackView() {
 
   return (
     <>
-      <div className="overlay-stack overlay-stack-top">
-        <div className="playback-mode-switch overlay-bar">
-          <button type="button" onClick={() => setMode("step")} disabled={mode === "step"}>
-            {t("playback.mode.step")}
-          </button>
-          <button type="button" onClick={() => setMode("fluid")} disabled={mode === "fluid"}>
-            {t("playback.mode.fluid")}
-          </button>
-        </div>
-      </div>
       {mode === "step" ? <StepPlayback /> : <FluidPlayback />}
+
+      <div className="playback-mode-switch">
+        <button
+          type="button"
+          className={mode === "step" ? "active" : ""}
+          onClick={() => setMode("step")}
+        >
+          {t("playback.mode.step")}
+        </button>
+        <button
+          type="button"
+          className={mode === "fluid" ? "active" : ""}
+          onClick={() => setMode("fluid")}
+        >
+          {t("playback.mode.fluid")}
+        </button>
+      </div>
     </>
   );
 }

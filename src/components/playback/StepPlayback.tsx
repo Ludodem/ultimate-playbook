@@ -75,14 +75,14 @@ export function StepPlayback() {
         </div>
       </div>
 
-      <div className="overlay-stack overlay-stack-bottom">
-        {currentFrame.note && <p className="frame-note-display overlay-bar">{currentFrame.note}</p>}
+      <div className="playback-dock">
+        {currentFrame.note && <p className="frame-note-display">{currentFrame.note}</p>}
 
         {children.length > 1 && (
           <ForkChoice options={children} onChoose={advanceTo} disabled={isAnimating} />
         )}
 
-        <div className="playback-controls overlay-bar">
+        <div className="playback-controls">
           <button
             type="button"
             onClick={() => currentFrame.parentId && setCurrentFrameId(currentFrame.parentId)}

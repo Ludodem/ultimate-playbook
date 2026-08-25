@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Frame } from "./models";
 import {
-  computeDisplayOrder,
+  computeCurrentPathView,
   getChildren,
   getRootFrame,
   getSubtreeIds,
@@ -72,18 +72,6 @@ describe("getSubtreeIds", () => {
   });
 });
 
-describe("computeDisplayOrder", () => {
-  it("numbers frames in pre-order from the root, children by siblingOrder", () => {
-    const order = computeDisplayOrder(frames);
-    expect(order.get("root")).toBe(1);
-    expect(order.get("a")).toBe(2);
-    expect(order.get("b")).toBe(3);
-    expect(order.get("c1")).toBe(4);
-    expect(order.get("c2")).toBe(5);
-    expect(order.get("d")).toBe(6);
-  });
-});
-
 describe("resolvePath", () => {
   it("follows single-child continuations without needing a choice", () => {
     const path = resolvePath(frames, {});
@@ -102,5 +90,32 @@ describe("resolvePath", () => {
 
   it("returns an empty path when there is no root", () => {
     expect(resolvePath([])).toEqual([]);
+  });
+});
+
+describe("computeCurrentPathView", () => {
+  it("extends the chain in both directions up to the fork, from any frame on the unambiguous stretch", () => {
+    for (const currentId of ["root", "a"]) {
+      const view = computeCurrentPathView(frames, currentId);
+      expect(view.chain.map((f) => f.id)).toEqual(["root", "a", "b"]);
+      expect(view.forkOptions.map((f) => f.id)).toEqual(["c1", "c2"]);
+    }
+  });
+
+  it("includes all ancestors and shows no fork options for a leaf on a branch", () => {
+    const view = computeCurrentPathView(frames, "c1");
+    expect(view.chain.map((f) => f.id)).toEqual(["root", "a", "b", "c1"]);
+    expect(view.forkOptions).toEqual([]);
+  });
+
+  it("extends through a simple continuation past a fork (d after c2)", () => {
+    const view = computeCurrentPathView(frames, "d");
+    expect(view.chain.map((f) => f.id)).toEqual(["root", "a", "b", "c2", "d"]);
+    expect(view.forkOptions).toEqual([]);
+  });
+
+  it("returns an empty view when there is no current frame or it is unknown", () => {
+    expect(computeCurrentPathView(frames, null)).toEqual({ chain: [], forkOptions: [] });
+    expect(computeCurrentPathView(frames, "missing")).toEqual({ chain: [], forkOptions: [] });
   });
 });

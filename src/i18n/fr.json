@@ -28,14 +28,14 @@
       "undo": "Annuler",
       "redo": "Rétablir",
       "rosterWarning": "Effectif élevé : l'affichage peut devenir difficile à lire au-delà de {{max}} joueurs par équipe.",
-      "remove": "Supprimer",
-      "deselect": "Désélectionner",
+      "removeNamed": "Supprimer {{label}}",
       "ghostFrameToggle": "Afficher la frame précédente en fantôme",
       "export": "⭳ Exporter (JSON)",
       "newAction": "Nouvelle action"
     },
     "frames": {
       "title": "Frames",
+      "jumpTo": "Aller à la frame {{n}}",
       "next": "+ Frame suivante",
       "addBranch": "+ Ajouter une option",
       "branchLabelPlaceholder": "Nom de la branche (ex. Strike)",

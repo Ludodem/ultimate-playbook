@@ -84,6 +84,16 @@ Couleurs par défaut : terrain en **gris** (neutre, façon sol de gymnase, ne co
 - Interface utilisable sur PC, tablette, smartphone (adaptation de la mise en page et des zones tactiles).
 - Structure d'internationalisation en place dès le MVP ; contenu complet en **français**, l'anglais n'est pas nécessairement traduit au MVP (le français reste la langue de repli).
 
+### 4.8 Disposition de l'écran d'édition
+
+Issu des retours utilisateur post-Phase 7/8 (deux itérations d'implémentation rejetées avant celle-ci — voir le journal de décisions, `docs/ARCHITECTURE.md` §8, pour le détail de ce qui n'a pas fonctionné). Principe : le terrain est **l'action principale** (on y passe l'essentiel du temps à positionner des joueurs), tout le reste est secondaire et ne doit lui disputer de l'espace qu'à la demande.
+
+- **Le terrain occupe tout l'espace disponible en continu.** Aucun panneau permanent ne partage l'écran avec lui ni ne le recouvre durablement — la seule exception tolérée est transitoire (voir le menu secondaire ci-dessous), jamais un état permanent.
+- **Barre "Frames" : toujours visible, en espace dédié (pas en recouvrement du terrain).** Elle affiche en permanence où on se trouve dans l'action (chemin depuis la racine, options à un embranchement) et permet de naviguer (taper une frame pour y aller) et d'enchaîner rapidement la frame suivante — c'est l'action répétée en boucle en construisant un play, donc elle reste directement accessible. Les actions de frame moins fréquentes (créer une branche, renommer une branche, réordonner, supprimer, ajouter une note) sont accessibles depuis le menu secondaire plutôt que d'alourdir cette barre.
+- **Bascule Éditer/Jouer : toujours visible, sous une forme compacte.** Ce n'est pas un réglage occasionnel mais un aller-retour permanent entre construire et relire un play ; elle reste donc accessible sans ouvrir le menu secondaire.
+- **Un unique bouton de menu secondaire, flottant, en haut à droite du terrain.** Il donne accès (dans un panneau qui s'ouvre à la demande et se referme ensuite) à tout ce qui n'a pas besoin d'être vu en permanence : nom de l'action (affichage/édition), export JSON, nouvelle action, ajout de joueur (attaque/défense), undo/redo, bascule "frame fantôme", et les actions de frame secondaires listées ci-dessus. Fermé, ce bouton ne coûte qu'un coin d'écran ; ouvert, il peut recouvrir temporairement une partie du terrain sans que ce soit gênant, puisqu'on n'est pas en train de déplacer un joueur pendant qu'on renomme l'action.
+- **Sélectionner un joueur (tap, sans le glisser) ne fait apparaître aucun panneau flottant.** Le joueur sélectionné est simplement mis en évidence visuellement ; sa suppression passe par le glisser-déposer vers la corbeille (déjà existante) ou par le menu secondaire.
+
 ## 5. Hors scope du MVP (post-MVP, voir `docs/ROADMAP.md`)
 
 - Bibliothèque hiérarchisée de plays (dossiers + tags).

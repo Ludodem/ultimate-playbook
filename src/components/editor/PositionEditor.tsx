@@ -6,11 +6,17 @@ import { actionFileName, buildAction } from "../../domain/action";
 import type { Position } from "../../domain/disc";
 import { controlPointForMidpoint, curveMidpoint } from "../../domain/interpolation";
 import { MAX_RECOMMENDED_PER_TEAM, useActionEditorStore } from "../../state/actionEditorStore";
+import { FrameActionsMenu } from "./FrameActionsMenu";
 import { FrameTimeline } from "./FrameTimeline";
 
 type ViewMode = "edit" | "play";
 
-/** Éditeur de positions d'une action en cours (Phases 3-6, docs/ROADMAP.md). */
+/**
+ * Éditeur de positions d'une action en cours (Phases 3-8, docs/ROADMAP.md).
+ * Disposition : le terrain occupe tout l'écran en continu, la barre Frames a
+ * un espace dédié (jamais posée par-dessus le terrain), et tout le reste vit
+ * derrière un unique menu ⋯ — voir docs/PRD.md §4.8.
+ */
 export function PositionEditor() {
   const { t } = useTranslation();
   const [viewMode, setViewMode] = useState<ViewMode>("edit");
@@ -93,64 +99,14 @@ export function PositionEditor() {
     : null;
   const displayedMidpoint = draftMidpoint ?? restingMidpoint;
 
+  const closeMenu = () => setMenuOpen(false);
+
   return (
     <div className="editor">
-      <div className="editor-topbar">
-        <button
-          type="button"
-          className="menu-toggle"
-          onClick={() => setMenuOpen((open) => !open)}
-          aria-expanded={menuOpen}
-          aria-label={t("editor.toolbar.menu")}
-        >
-          ☰
-        </button>
-        <div className="view-mode-switch">
-          <button type="button" onClick={() => setViewMode("edit")} disabled={viewMode === "edit"}>
-            {t("editor.viewMode.edit")}
-          </button>
-          <button type="button" onClick={() => setViewMode("play")} disabled={viewMode === "play"}>
-            {t("editor.viewMode.play")}
-          </button>
-        </div>
-      </div>
-
-      {menuOpen && (
-        <div className="action-menu">
-          <input
-            type="text"
-            className="action-name-input"
-            value={actionName}
-            onChange={(e) => setActionName(e.target.value)}
-            aria-label={t("editor.setup.name")}
-          />
-          <div className="action-menu-buttons">
-            <button type="button" onClick={handleExport}>
-              {t("editor.toolbar.export")}
-            </button>
-            <button type="button" onClick={resetToSetup}>
-              {t("editor.toolbar.newAction")}
-            </button>
-          </div>
-          {previousFrame && (
-            <label className="checkbox-option ghost-toggle">
-              <input
-                type="checkbox"
-                checked={showGhostFrame}
-                onChange={(e) => setShowGhostFrame(e.target.checked)}
-              />
-              {t("editor.toolbar.ghostFrameToggle")}
-            </label>
-          )}
-        </div>
-      )}
-
       {viewMode === "play" ? (
         <PlaybackView />
       ) : (
         <>
-          {/* Terrain plein écran (voir docs/ARCHITECTURE.md §8) : couche de fond,
-              tout le reste de l'UI flotte par-dessus en overlay translucide. */}
           <div className="field-stage">
             <div className="field-demo">
               <Field
@@ -159,7 +115,7 @@ export function PositionEditor() {
                 ghostFrame={showGhostFrame ? (previousFrame ?? undefined) : undefined}
                 interactive={{
                   selectedEntityId,
-                  onEntitySelect: selectEntity,
+                  onEntitySelect: (id) => selectEntity(selectedEntityId === id ? null : id),
                   onEntityMove: moveEntity,
                   onEntityDelete: removeEntity,
                   onDiscMove: moveDisc,
@@ -185,63 +141,135 @@ export function PositionEditor() {
                 }
               />
             </div>
-          </div>
 
-          <div className="overlay-stack overlay-stack-top">
-            <div className="toolbar overlay-bar">
-              <button type="button" onClick={() => addEntity("offense")}>
-                {t("editor.toolbar.addOffense")}
-              </button>
-              <button type="button" onClick={() => addEntity("defense")}>
-                {t("editor.toolbar.addDefense")}
-              </button>
-              <button type="button" onClick={undo} disabled={past.length === 0}>
-                {t("editor.toolbar.undo")}
-              </button>
-              <button type="button" onClick={redo} disabled={future.length === 0}>
-                {t("editor.toolbar.redo")}
-              </button>
-            </div>
-
-            {showRosterWarning && (
-              <p className="warning overlay-bar">
-                {t("editor.toolbar.rosterWarning", { max: MAX_RECOMMENDED_PER_TEAM })}
-              </p>
-            )}
-
-            {discMoved && (
-              <p className="hint overlay-bar">
-                {t("editor.curve.hint")}
-                {storedControlPoint && (
-                  <button
-                    type="button"
-                    className="curve-reset"
-                    onClick={() => setDiscCurveControlPoint(null)}
-                  >
-                    {t("editor.curve.reset")}
-                  </button>
+            {(showRosterWarning || discMoved) && (
+              <div className="field-banner-stack">
+                {showRosterWarning && (
+                  <p className="warning field-banner">
+                    {t("editor.toolbar.rosterWarning", { max: MAX_RECOMMENDED_PER_TEAM })}
+                  </p>
                 )}
-              </p>
-            )}
-          </div>
-
-          <div className="overlay-stack overlay-stack-bottom">
-            {selectedEntity && (
-              <div className="selection-panel overlay-bar">
-                <span>
-                  {selectedEntity.label} ({selectedEntity.team})
-                </span>
-                <button type="button" onClick={() => removeEntity(selectedEntity.id)}>
-                  {t("editor.toolbar.remove")}
-                </button>
-                <button type="button" onClick={() => selectEntity(null)}>
-                  {t("editor.toolbar.deselect")}
-                </button>
+                {discMoved && (
+                  <p className="hint field-banner">
+                    {t("editor.curve.hint")}
+                    {storedControlPoint && (
+                      <button
+                        type="button"
+                        className="curve-reset"
+                        onClick={() => setDiscCurveControlPoint(null)}
+                      >
+                        {t("editor.curve.reset")}
+                      </button>
+                    )}
+                  </p>
+                )}
               </div>
             )}
-
-            <FrameTimeline />
           </div>
+
+          <FrameTimeline />
+        </>
+      )}
+
+      <div className="mode-switch">
+        <button
+          type="button"
+          className={viewMode === "edit" ? "active" : ""}
+          onClick={() => setViewMode("edit")}
+        >
+          {t("editor.viewMode.edit")}
+        </button>
+        <button
+          type="button"
+          className={viewMode === "play" ? "active" : ""}
+          onClick={() => setViewMode("play")}
+        >
+          {t("editor.viewMode.play")}
+        </button>
+      </div>
+
+      {viewMode === "edit" && (
+        <>
+          <button
+            type="button"
+            className="menu-fab"
+            onClick={() => setMenuOpen((open) => !open)}
+            aria-expanded={menuOpen}
+            aria-label={t("editor.toolbar.menu")}
+          >
+            ⋯
+          </button>
+
+          {menuOpen && (
+            <>
+              <div className="menu-scrim" onClick={closeMenu} />
+              <div className="menu-panel">
+                <span className="menu-section-label">{t("editor.setup.name")}</span>
+                <input
+                  type="text"
+                  className="action-name-input"
+                  value={actionName}
+                  onChange={(e) => setActionName(e.target.value)}
+                  aria-label={t("editor.setup.name")}
+                />
+                <div className="menu-group">
+                  <button type="button" onClick={handleExport}>
+                    {t("editor.toolbar.export")}
+                  </button>
+                  <button type="button" onClick={resetToSetup}>
+                    {t("editor.toolbar.newAction")}
+                  </button>
+                </div>
+
+                <div className="menu-divider" />
+
+                <div className="menu-group">
+                  <button type="button" onClick={() => addEntity("offense")}>
+                    {t("editor.toolbar.addOffense")}
+                  </button>
+                  <button type="button" onClick={() => addEntity("defense")}>
+                    {t("editor.toolbar.addDefense")}
+                  </button>
+                </div>
+                <div className="menu-group">
+                  <button type="button" onClick={undo} disabled={past.length === 0}>
+                    {t("editor.toolbar.undo")}
+                  </button>
+                  <button type="button" onClick={redo} disabled={future.length === 0}>
+                    {t("editor.toolbar.redo")}
+                  </button>
+                </div>
+                {selectedEntity && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      removeEntity(selectedEntity.id);
+                    }}
+                  >
+                    {t("editor.toolbar.removeNamed", { label: selectedEntity.label })}
+                  </button>
+                )}
+
+                <div className="menu-divider" />
+
+                {previousFrame && (
+                  <label className="checkbox-option ghost-toggle">
+                    <input
+                      type="checkbox"
+                      checked={showGhostFrame}
+                      onChange={(e) => setShowGhostFrame(e.target.checked)}
+                    />
+                    {t("editor.toolbar.ghostFrameToggle")}
+                  </label>
+                )}
+
+                <div className="menu-divider" />
+
+                <span className="menu-section-label">{t("editor.frames.title")}</span>
+                <FrameActionsMenu />
+              </div>
+            </>
+          )}
         </>
       )}
     </div>

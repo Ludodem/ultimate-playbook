@@ -15,7 +15,6 @@
   --radius-lg: 16px;
   --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
   --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.16);
-  --topbar-height: 3.6rem;
   color-scheme: light dark;
   font:
     16px/1.5 system-ui,
@@ -81,17 +80,19 @@ body {
   margin: 0 auto;
 }
 
-/* `.editor` : le terrain occupe TOUT l'écran (pas un partage d'espace avec le
-   reste de l'UI) ; tout le chrome (menu, toolbar, timeline...) flotte
-   par-dessus en `position: fixed`, translucide/flouté (`.overlay-bar`) pour
-   ne jamais complètement masquer un joueur en dessous — voir retour
-   utilisateur et journal de décisions, `docs/ARCHITECTURE.md` §8. */
+/* `.editor` : le terrain occupe tout l'espace en continu (jamais partagé ni
+   recouvert par un panneau permanent) ; la barre Frames a un espace dédié en
+   bas (colonne flex, pas un overlay) ; le reste (nom, export, ajout de
+   joueur, undo/redo, actions de frame secondaires...) vit derrière un seul
+   bouton menu flottant — voir docs/PRD.md §4.8 et docs/ARCHITECTURE.md §8. */
 .editor {
   text-align: left;
   height: 100dvh;
   width: 100%;
   position: relative;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .setup-panel fieldset {
@@ -128,60 +129,169 @@ body {
   display: none;
 }
 
-/* Couche de fond : le terrain remplit tout l'espace disponible de `.editor`
-   (`Field`, voir field/Field.tsx, se dimensionne lui-même pour tenir dedans
-   en largeur ET en hauteur, comme `object-fit: contain`). */
+/* Couche de fond : le terrain remplit tout l'espace qui lui reste dans la
+   colonne flex de `.editor`, une fois la barre Frames (`.frame-timeline`,
+   taille naturelle) décomptée. `Field` (voir field/Field.tsx) se dimensionne
+   lui-même pour tenir dans cet espace en largeur ET en hauteur, comme
+   `object-fit: contain`. */
 .field-stage {
-  position: absolute;
-  inset: 0;
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
-/* Barre du haut : seule barre "en dur" (pas une pastille flottante) — sert de
-   repère fixe, tout le reste s'accroche en dessous via `--topbar-height`. */
-.editor-topbar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
+/* Bannières contextuelles (avertissement effectif, aide trajectoire courbe) :
+   transitoires (n'apparaissent que quand c'est pertinent), donc tolérées en
+   overlay flouté — contrairement à un panneau permanent, rien n'est jamais
+   durablement inatteignable en dessous. Marge latérale pour ne jamais passer
+   sous les pastilles Éditer/Jouer et ⋯. */
+.field-banner-stack {
+  position: absolute;
+  top: 0.75rem;
+  left: 4rem;
+  right: 4rem;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  pointer-events: none;
+}
+
+.field-banner {
+  pointer-events: auto;
+  max-width: 22rem;
+  text-align: center;
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid color-mix(in srgb, var(--border) 75%, transparent);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  padding: 0.4rem 0.65rem;
+  margin: 0;
+}
+
+/* Pastilles flottantes toujours visibles (Éditer/Jouer, Pas à pas/Fluide) :
+   petites, translucides — le coût en espace terrain permanent est jugé
+   négligeable (un coin d'écran), contrairement à un panneau qui recouvrirait
+   une zone de jeu entière. */
+.mode-switch,
+.playback-mode-switch {
+  position: absolute;
+  top: 0.6rem;
   z-index: 40;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  height: var(--topbar-height);
-  padding: 0 0.6rem;
-  background: color-mix(in srgb, var(--bg) 78%, transparent);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  gap: 2px;
+  background: color-mix(in srgb, var(--surface) 78%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  border-radius: 999px;
+  padding: 3px;
+  box-shadow: var(--shadow-sm);
 }
 
-.menu-toggle {
-  flex: 0 0 auto;
-  font-size: 1.1rem;
-  padding: 0.4rem 0.6rem;
+.mode-switch {
+  left: 0.6rem;
 }
 
-.action-menu {
+.playback-mode-switch {
+  right: 0.6rem;
+}
+
+.mode-switch button,
+.playback-mode-switch button {
+  min-height: 44px; /* cible tactile, voir docs/PRD.md §4.7 */
+  padding: 0.3rem 0.8rem;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.mode-switch button.active,
+.playback-mode-switch button.active {
+  background: var(--surface-raised);
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Bouton menu ⋯ : seule porte d'entrée vers tout ce qui n'a pas besoin d'être
+   visible en permanence (nom de l'action, export, ajout de joueur,
+   undo/redo, actions de frame secondaires...) — voir docs/PRD.md §4.8. */
+.menu-fab {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  z-index: 40;
+  width: 44px;
+  height: 44px;
+  min-height: 44px; /* cible tactile, voir docs/PRD.md §4.7 */
+  padding: 0;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--surface) 78%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Le menu, lui, est un vrai overlay opaque : il ne s'affiche qu'à la demande,
+   ponctuellement — pas de risque de recouvrir durablement un joueur, on n'est
+   pas en train de déplacer quoi que ce soit pendant qu'on renomme l'action. */
+.menu-scrim {
   position: fixed;
-  top: calc(var(--topbar-height) + 0.4rem);
-  left: 0.5rem;
-  right: 0.5rem;
+  inset: 0;
   z-index: 45;
-  background: color-mix(in srgb, var(--surface-raised) 92%, transparent);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: rgba(10, 12, 16, 0.4);
+}
+
+.menu-panel {
+  position: absolute;
+  top: calc(0.6rem + 44px + 0.4rem);
+  right: 0.6rem;
+  z-index: 50;
+  width: min(280px, calc(100vw - 1.2rem));
+  max-height: min(75vh, 32rem);
+  overflow-y: auto;
+  background: var(--surface-raised);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow-md);
   padding: 0.75rem;
 }
 
-.action-menu-buttons {
+.menu-section-label {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin: 0.6rem 0 0.35rem;
+}
+
+.menu-panel > .menu-section-label:first-child {
+  margin-top: 0;
+}
+
+.menu-group {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
+  gap: 0.4rem;
+  margin: 0.35rem 0;
+}
+
+.menu-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 0.6rem 0;
 }
 
 .action-name-input {
@@ -191,42 +301,22 @@ body {
   font-weight: 600;
 }
 
-/* Piles d'overlays flottants au-dessus du terrain : une en haut (sous la
-   topbar), une en bas. `pointer-events: none` sur la pile elle-même laisse
-   passer les clics/drags vers le terrain entre deux pastilles ; seules les
-   pastilles (`.overlay-bar`) redeviennent cliquables. */
-.overlay-stack {
-  position: fixed;
-  left: 0;
-  right: 0;
-  z-index: 30;
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  padding: 0 0.5rem;
-  pointer-events: none;
-}
-
-.overlay-stack-top {
-  top: calc(var(--topbar-height) + 0.4rem);
-}
-
-.overlay-stack-bottom {
-  bottom: 0.5rem;
-  justify-content: flex-end;
-}
-
-.overlay-bar,
+/* Barres dédiées toujours visibles (Frames, contrôles de lecture) : espace
+   propre dans la colonne flex de `.editor`, jamais posées par-dessus le
+   terrain — donc aucun joueur n'y est durablement inatteignable. */
 .frame-timeline,
-.fork-choice {
-  pointer-events: auto;
-  background: color-mix(in srgb, var(--surface) 82%, transparent);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid color-mix(in srgb, var(--border) 75%, transparent);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-md);
-  padding: 0.5rem 0.6rem;
+.playback-dock {
+  flex: none;
+  background: var(--surface-raised);
+  border-top: 1px solid var(--border);
+  border-radius: var(--radius) var(--radius) 0 0;
+  box-shadow: 0 -4px 16px rgba(15, 23, 42, 0.08);
+  padding: 0.5rem 0.6rem calc(0.5rem + env(safe-area-inset-bottom, 0px));
+}
+
+.playback-dock {
+  max-height: 40vh;
+  overflow-y: auto;
 }
 
 .radio-option,
@@ -270,14 +360,6 @@ button.primary {
   margin-top: 0.5rem;
 }
 
-.toolbar,
-.frame-toolbar {
-  display: flex;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  gap: 0.5rem;
-}
-
 .hint {
   font-size: 0.85rem;
   color: var(--text-muted);
@@ -303,40 +385,32 @@ button.primary {
   font-size: 0.85rem;
 }
 
-.selection-panel {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.frame-timeline {
-  max-height: 32vh;
-  overflow-y: auto;
-}
-
-.frame-timeline h3 {
-  margin: 0 0 0.3rem;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--text-muted);
+.frame-timeline-label {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  margin-bottom: 0.35rem;
 }
 
 .frame-row {
   display: flex;
   flex-wrap: nowrap;
+  align-items: center;
   overflow-x: auto;
   gap: 0.4rem;
   padding-bottom: 0.15rem;
 }
 
 .frame-chip {
+  flex: none;
   min-width: 44px;
+  min-height: 44px; /* cible tactile, voir docs/PRD.md §4.7 */
   border-radius: var(--radius-sm);
   border: 1px solid var(--border);
-  background: var(--surface-raised);
+  background: var(--surface);
 }
 
 .frame-chip.is-current {
@@ -346,22 +420,32 @@ button.primary {
   font-weight: bold;
 }
 
-.branches {
+.branch-pill {
+  flex: none;
+  min-height: 44px;
+  padding: 0 0.65rem;
   display: flex;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  gap: 1rem;
-  margin: 0.5rem 0 0.5rem 1rem;
-  padding-left: 0.75rem;
-  padding-bottom: 0.15rem;
-  border-left: 2px solid var(--border);
+  align-items: center;
+  border-radius: var(--radius-sm);
+  border: 1px dashed var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  white-space: nowrap;
 }
 
-.branch-label {
-  display: block;
-  font-size: 0.8rem;
-  font-weight: bold;
-  margin-bottom: 0.25rem;
+.chip-add {
+  flex: none;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  margin-left: auto;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-size: 1.15rem;
+  font-weight: 700;
 }
 
 .branch-form {
@@ -391,12 +475,6 @@ button.primary {
 
 /* Lecture (Phase 5) */
 
-.view-mode-switch,
-.playback-mode-switch {
-  display: flex;
-  gap: 0.5rem;
-}
-
 .playback-controls {
   display: flex;
   flex-wrap: wrap;
@@ -411,6 +489,12 @@ button.primary {
 
 .playback-end {
   font-weight: bold;
+}
+
+.fork-choice p {
+  margin: 0 0 0.35rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
 }
 
 .fork-choice-options {

@@ -32,23 +32,56 @@ export function getSubtreeIds(frames: Frame[], rootId: string): string[] {
   return ids;
 }
 
-/**
- * Numérotation d'affichage stable (parcours préfixe depuis la racine, enfants
- * dans l'ordre de siblingOrder). Sert à identifier une frame dans la timeline
- * sans dépendre d'un index de tableau brut.
- */
-export function computeDisplayOrder(frames: Frame[]): Map<string, number> {
-  const order = new Map<string, number>();
-  let counter = 1;
+export interface CurrentPathView {
+  /** Chemin continu passant par la frame courante, sans ambiguïté : tous les
+   * ancêtres jusqu'à la racine (remonter via `parentId` ne bifurque jamais),
+   * puis les descendants tant qu'il n'y a qu'un seul enfant à chaque étape. */
+  chain: Frame[];
+  /** Options du premier embranchement rencontré juste après la fin de `chain`
+   * (tableau vide si `chain` se termine sur une feuille ou sur la frame
+   * courante elle-même sans enfant). */
+  forkOptions: Frame[];
+}
 
-  function visit(id: string) {
-    order.set(id, counter++);
-    for (const child of getChildren(frames, id)) visit(child.id);
+/**
+ * Vue compacte "où en est-on dans l'arbre" pour la barre Frames (voir
+ * docs/PRD.md §4.8) : pas tout l'arbre, seulement le chemin qui passe par la
+ * frame courante, étendu au maximum sans ambiguïté dans les deux sens.
+ * Naviguer vers une autre branche déjà explorée se fait en deux temps
+ * (remonter jusqu'à l'embranchement, puis choisir l'autre option) plutôt
+ * qu'en un raccourci direct — compromis délibéré pour garder cette barre
+ * toujours visible sans jamais afficher tout l'arbre.
+ */
+export function computeCurrentPathView(
+  frames: Frame[],
+  currentFrameId: string | null,
+): CurrentPathView {
+  const current = currentFrameId ? getFrame(frames, currentFrameId) : undefined;
+  if (!current) return { chain: [], forkOptions: [] };
+
+  const ancestors: Frame[] = [];
+  let cursor = current;
+  while (cursor.parentId !== null) {
+    const parent = getFrame(frames, cursor.parentId);
+    if (!parent) break;
+    ancestors.unshift(parent);
+    cursor = parent;
   }
 
-  const root = getRootFrame(frames);
-  if (root) visit(root.id);
-  return order;
+  const descendants: Frame[] = [];
+  let tail = current;
+  for (;;) {
+    const children = getChildren(frames, tail.id);
+    if (children.length !== 1) break;
+    descendants.push(children[0]);
+    tail = children[0];
+  }
+
+  const tailChildren = getChildren(frames, tail.id);
+  return {
+    chain: [...ancestors, current, ...descendants],
+    forkOptions: tailChildren.length > 1 ? tailChildren : [],
+  };
 }
 
 /**

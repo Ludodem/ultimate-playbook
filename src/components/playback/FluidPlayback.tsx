@@ -103,11 +103,11 @@ export function FluidPlayback() {
         </div>
       </div>
 
-      <div className="overlay-stack overlay-stack-bottom">
+      <div className="playback-dock">
         {!isPathComplete && <ForkChoice options={pendingOptions} onChoose={handleChoose} />}
 
         {isPathComplete && (
-          <div className="playback-controls overlay-bar">
+          <div className="playback-controls">
             <button type="button" onClick={handleTogglePlay} disabled={!canPlay}>
               {isPlaying && !atEnd ? t("playback.pause") : t("playback.play")}
             </button>

@@ -19,6 +19,7 @@ describe("App", () => {
     await user.click(screen.getByRole("button", { name: "Commencer" }));
 
     expect(screen.queryByRole("heading", { name: "Nouvelle action" })).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "+ Attaque" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Menu" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Aller à la frame 1" })).toBeInTheDocument();
   });
 });
