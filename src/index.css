@@ -57,6 +57,67 @@ body {
   margin: 0.75rem 0;
 }
 
+.text-field {
+  display: block;
+  margin: 0.75rem 0;
+}
+
+.text-field input {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  margin-top: 0.25rem;
+}
+
+.import-panel {
+  margin-top: 1.5rem;
+  border-top: 1px solid #d0d0d5;
+  padding-top: 1rem;
+}
+
+.import-input-hidden {
+  display: none;
+}
+
+.editor-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.menu-toggle {
+  flex: 0 0 auto;
+  font-size: 1.1rem;
+  padding: 0.4rem 0.6rem;
+}
+
+.action-menu {
+  margin-bottom: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid #d0d0d5;
+  border-radius: 6px;
+}
+
+.action-menu-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.action-name-input {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  font-weight: bold;
+}
+
+.edit-hints {
+  margin: 0.5rem 0;
+}
+
 .radio-option,
 .checkbox-option {
   display: block;
@@ -220,4 +281,104 @@ button {
   background: #f2c94c;
   border-color: #b8860b;
   font-weight: bold;
+}
+
+/* Terrain plein écran + chrome compacté sur petit écran, sans scroll de page
+   (Phase 8, docs/ROADMAP.md) : le DOM ne change pas selon la taille d'écran,
+   seule sa mise en page bascule ici — sur desktop/tablette large, tout
+   s'affiche en flux normal (comportement des Phases 3-7, inchangé). Seul le
+   menu ☰ (nom/export/nouvelle action) est un vrai overlay peint par-dessus le
+   terrain ; le reste du chrome (toolbar, hints, sélection) partage l'espace
+   en flux normal plutôt que de risquer de masquer des joueurs — voir
+   `docs/ARCHITECTURE.md` §8. */
+@media (max-width: 700px) {
+  /* `.app-shell` garde son padding/centrage sur l'écran de démarrage (setup-panel) ;
+     seul l'écran d'édition passe en plein écran. */
+  .app-shell:has(.editor) {
+    max-width: none;
+    height: 100dvh;
+    padding: 0;
+    overflow-y: auto;
+  }
+
+  .editor {
+    max-width: none;
+    height: 100dvh;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    position: relative;
+  }
+
+  .editor-topbar {
+    flex: 0 0 auto;
+    padding: 0.4rem 0.6rem;
+    margin-bottom: 0;
+  }
+
+  .action-menu {
+    position: absolute;
+    top: 3.25rem;
+    left: 0.5rem;
+    right: 0.5rem;
+    z-index: 20;
+    background: var(--bg);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+    margin-bottom: 0;
+  }
+
+  .edit-view {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    padding: 0 0.5rem;
+  }
+
+  /* Rangées de chrome compactes (toolbar, avertissements, sélection) : ne
+     grandissent pas, laissent le maximum d'espace au terrain. */
+  .edit-view > .toolbar,
+  .edit-view > .warning,
+  .edit-view > .hint,
+  .edit-view > .selection-panel {
+    flex: 0 0 auto;
+    margin: 0.3rem 0;
+  }
+
+  .field-stage {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    display: flex;
+    align-items: flex-start;
+  }
+
+  .field-demo {
+    max-width: none;
+    width: 100%;
+    margin: 0;
+  }
+
+  .edit-hints {
+    flex: 0 0 auto;
+    margin: 0.35rem 0;
+  }
+
+  .frame-timeline {
+    flex: 0 0 auto;
+    max-height: 38vh;
+    overflow-y: auto;
+    margin-top: 0;
+    padding: 0.5rem;
+  }
+
+  .frame-row,
+  .frame-toolbar,
+  .branches {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 0.15rem;
+  }
 }

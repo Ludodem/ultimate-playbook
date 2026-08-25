@@ -2,7 +2,13 @@ import { describe, expect, it } from "vitest";
 import type { Frame } from "./models";
 import { DEFAULT_TRANSITION_MS, resolveTransitionMs } from "./playback";
 
-const baseFrame: Frame = { id: "f", parentId: null, siblingOrder: 0, entities: [], disc: {} };
+const baseFrame: Frame = {
+  id: "f",
+  parentId: null,
+  siblingOrder: 0,
+  entities: [],
+  disc: { x: 50, y: 50 },
+};
 
 describe("resolveTransitionMs", () => {
   it("falls back to DEFAULT_TRANSITION_MS when the frame doesn't specify one", () => {

@@ -1,8 +1,18 @@
 import { create } from "zustand";
-import { resolveDiscPosition } from "../domain/disc";
-import type { CurveControlPoint, Disc, Entity, FieldConfig, Frame, Team } from "../domain/models";
+import { buildAction } from "../domain/action";
+import type {
+  Action,
+  CurveControlPoint,
+  Disc,
+  Entity,
+  FieldConfig,
+  Frame,
+  Team,
+} from "../domain/models";
+import { DEFAULT_TRANSITION_MS } from "../domain/playback";
 import { findFreeSpawnPosition } from "../domain/spawn";
 import { getChildren, getSubtreeIds } from "../domain/tree";
+import { saveActionToLibrary, setLastActiveActionId } from "./libraryStore";
 
 /** Voir docs/DATA_MODEL.md §2 : seuil recommandé, pas une limite technique. */
 export const MAX_RECOMMENDED_PER_TEAM = 15;
@@ -18,6 +28,14 @@ interface HistoryEntry {
 }
 
 interface ActionEditorState {
+  /** Métadonnées de l'`Action` en cours (voir docs/DATA_MODEL.md) — `null`/vides
+   * tant qu'aucune action n'est démarrée (écran de configuration affiché). */
+  actionId: string | null;
+  actionName: string;
+  tags: string[];
+  defaultTransitionMs: number;
+  createdAt: string | null;
+  updatedAt: string | null;
   fieldConfig: FieldConfig | null;
   frames: Frame[];
   currentFrameId: string | null;
@@ -27,17 +45,22 @@ interface ActionEditorState {
   future: HistoryEntry[];
 
   /** Démarre une nouvelle action : crée la frame racine à partir d'un preset terrain + effectif. */
-  start: (fieldConfig: FieldConfig, initial: { entities: Entity[]; disc: Disc }) => void;
+  start: (
+    fieldConfig: FieldConfig,
+    initial: { entities: Entity[]; disc: Disc },
+    name: string,
+  ) => void;
+  setActionName: (name: string) => void;
+  /** Charge une action existante (reprise au démarrage, ou import JSON). */
+  loadAction: (action: Action) => void;
+  /** Abandonne l'action en cours, revient à l'écran de configuration. */
+  resetToSetup: () => void;
   selectFrame: (id: string) => void;
   selectEntity: (id: string | null) => void;
   moveEntity: (id: string, x: number, y: number) => void;
   moveDisc: (x: number, y: number) => void;
   addEntity: (team: Team) => void;
   removeEntity: (id: string) => void;
-  /** Donne le disque à cette entité (et le retire à toute autre), sur la frame courante. */
-  assignDiscTo: (id: string) => void;
-  /** Détache le disque de son porteur, en le figeant à sa position actuelle. */
-  freeDisc: () => void;
   setNote: (note: string) => void;
   /** Définit (ou, avec `null`, réinitialise) le point de contrôle de la courbe
    * du disque arrivant sur la frame courante — voir docs/DATA_MODEL.md §8. */
@@ -73,11 +96,12 @@ function cloneFrameContent(source: Frame): Pick<Frame, "entities" | "disc"> {
 function withHistory(
   state: ActionEditorState,
   updater: (frames: Frame[]) => Frame[],
-): Pick<ActionEditorState, "frames" | "past" | "future"> {
+): Pick<ActionEditorState, "frames" | "past" | "future" | "updatedAt"> {
   return {
     frames: updater(state.frames),
     past: [...state.past, { frames: state.frames, currentFrameId: state.currentFrameId }],
     future: [],
+    updatedAt: new Date().toISOString(),
   };
 }
 
@@ -111,6 +135,12 @@ function swapWithChild(frames: Frame[], parent: Frame, child: Frame): Frame[] {
 }
 
 export const useActionEditorStore = create<ActionEditorState>((set, get) => ({
+  actionId: null,
+  actionName: "",
+  tags: [],
+  defaultTransitionMs: DEFAULT_TRANSITION_MS,
+  createdAt: null,
+  updatedAt: null,
   fieldConfig: null,
   frames: [],
   currentFrameId: null,
@@ -118,7 +148,7 @@ export const useActionEditorStore = create<ActionEditorState>((set, get) => ({
   past: [],
   future: [],
 
-  start: (fieldConfig, initial) => {
+  start: (fieldConfig, initial, name) => {
     const rootId = crypto.randomUUID();
     const rootFrame: Frame = {
       id: rootId,
@@ -127,10 +157,55 @@ export const useActionEditorStore = create<ActionEditorState>((set, get) => ({
       entities: initial.entities,
       disc: initial.disc,
     };
+    const now = new Date().toISOString();
     set({
+      actionId: crypto.randomUUID(),
+      actionName: name,
+      tags: [],
+      defaultTransitionMs: DEFAULT_TRANSITION_MS,
+      createdAt: now,
+      updatedAt: now,
       fieldConfig,
       frames: [rootFrame],
       currentFrameId: rootId,
+      selectedEntityId: null,
+      past: [],
+      future: [],
+    });
+  },
+
+  setActionName: (name) => set({ actionName: name, updatedAt: new Date().toISOString() }),
+
+  loadAction: (action) => {
+    const root = action.frames.find((f) => f.parentId === null) ?? null;
+    set({
+      actionId: action.id,
+      actionName: action.name,
+      tags: action.tags,
+      defaultTransitionMs: action.defaultTransitionMs,
+      createdAt: action.createdAt,
+      updatedAt: action.updatedAt,
+      fieldConfig: action.fieldConfig,
+      frames: action.frames,
+      currentFrameId: root?.id ?? null,
+      selectedEntityId: null,
+      past: [],
+      future: [],
+    });
+  },
+
+  resetToSetup: () => {
+    setLastActiveActionId(null);
+    set({
+      actionId: null,
+      actionName: "",
+      tags: [],
+      defaultTransitionMs: DEFAULT_TRANSITION_MS,
+      createdAt: null,
+      updatedAt: null,
+      fieldConfig: null,
+      frames: [],
+      currentFrameId: null,
       selectedEntityId: null,
       past: [],
       future: [],
@@ -173,41 +248,14 @@ export const useActionEditorStore = create<ActionEditorState>((set, get) => ({
   removeEntity: (id) =>
     set((state) => {
       if (!state.currentFrameId) return {};
-      const patch = updateCurrentFrame(state, (frame) => {
-        const wasHolder = frame.disc.heldBy === id;
-        const removed = frame.entities.find((e) => e.id === id);
-        return {
-          ...frame,
-          entities: frame.entities.filter((e) => e.id !== id),
-          disc: wasHolder && removed ? { x: removed.x, y: removed.y } : frame.disc,
-        };
-      });
+      const patch = updateCurrentFrame(state, (frame) => ({
+        ...frame,
+        entities: frame.entities.filter((e) => e.id !== id),
+      }));
       return {
         ...patch,
         selectedEntityId: state.selectedEntityId === id ? null : state.selectedEntityId,
       };
-    }),
-
-  assignDiscTo: (id) =>
-    set((state) =>
-      updateCurrentFrame(state, (frame) => ({
-        ...frame,
-        entities: frame.entities.map((e) => ({ ...e, hasDisc: e.id === id })),
-        disc: { heldBy: id },
-      })),
-    ),
-
-  freeDisc: () =>
-    set((state) => {
-      const current = state.frames.find((f) => f.id === state.currentFrameId);
-      if (!current) return {};
-      const position = resolveDiscPosition(current.disc, current.entities);
-      if (!position) return {};
-      return updateCurrentFrame(state, (frame) => ({
-        ...frame,
-        entities: frame.entities.map((e) => ({ ...e, hasDisc: false })),
-        disc: { x: position.x, y: position.y },
-      }));
     }),
 
   setNote: (note) => set((state) => updateCurrentFrame(state, (frame) => ({ ...frame, note }))),
@@ -326,6 +374,7 @@ export const useActionEditorStore = create<ActionEditorState>((set, get) => ({
         past: state.past.slice(0, -1),
         future: [{ frames: state.frames, currentFrameId: state.currentFrameId }, ...state.future],
         selectedEntityId: null,
+        updatedAt: new Date().toISOString(),
       };
     }),
 
@@ -339,6 +388,38 @@ export const useActionEditorStore = create<ActionEditorState>((set, get) => ({
         past: [...state.past, { frames: state.frames, currentFrameId: state.currentFrameId }],
         future: rest,
         selectedEntityId: null,
+        updatedAt: new Date().toISOString(),
       };
     }),
 }));
+
+// Sauvegarde automatique (Phase 7, docs/ROADMAP.md) : toute action qui modifie
+// le contenu persistable (frames, config terrain, nom, tags, timing) réécrit
+// l'action dans le localStorage, sans bouton "Enregistrer" dédié. `currentFrameId`
+// et `selectedEntityId` sont un état d'édition pur, absent du modèle `Action` —
+// naviguer entre frames ne déclenche donc pas de sauvegarde.
+useActionEditorStore.subscribe((state, prevState) => {
+  if (!state.actionId || !state.fieldConfig || !state.createdAt || !state.updatedAt) return;
+  if (
+    state.frames === prevState.frames &&
+    state.fieldConfig === prevState.fieldConfig &&
+    state.actionName === prevState.actionName &&
+    state.tags === prevState.tags &&
+    state.defaultTransitionMs === prevState.defaultTransitionMs
+  ) {
+    return;
+  }
+  saveActionToLibrary(
+    buildAction({
+      id: state.actionId,
+      name: state.actionName,
+      tags: state.tags,
+      fieldConfig: state.fieldConfig,
+      defaultTransitionMs: state.defaultTransitionMs,
+      frames: state.frames,
+      createdAt: state.createdAt,
+      updatedAt: state.updatedAt,
+    }),
+  );
+  setLastActiveActionId(state.actionId);
+});

@@ -1,4 +1,4 @@
-import { resolveDiscPosition, type Position } from "./disc";
+import type { Position } from "./disc";
 import type { Frame, IncomingCurves } from "./models";
 
 export function lerp(a: number, b: number, t: number): number {
@@ -76,8 +76,8 @@ function interpolateWithOptionalCurve(
  *   (voir docs/DATA_MODEL.md §8 — seule la clé "disc" a une UI d'édition au MVP).
  * - Une entité ajoutée entre les deux frames (absente de `from`) apparaît
  *   directement à sa position dans `to`, sans animation d'entrée.
- * - Le disque est interpolé entre ses positions résolues (`resolveDiscPosition`)
- *   dans chaque frame, qu'il soit tenu ou libre.
+ * - Le disque (toujours en position libre) est interpolé entre ses positions
+ *   dans chaque frame.
  */
 export function buildInterpolatedFrame(from: Frame, to: Frame, t: number): Frame {
   const fromById = new Map(from.entities.map((e) => [e.id, e]));
@@ -90,14 +90,11 @@ export function buildInterpolatedFrame(from: Frame, to: Frame, t: number): Frame
     return { ...entity, ...position };
   });
 
-  const discFrom = resolveDiscPosition(from.disc, from.entities);
-  const discTo = resolveDiscPosition(to.disc, to.entities);
-  const discPosition =
-    discFrom && discTo ? interpolateWithOptionalCurve(discFrom, discTo, t, curves.disc) : discTo;
+  const discPosition = interpolateWithOptionalCurve(from.disc, to.disc, t, curves.disc);
 
   return {
     ...to,
     entities,
-    disc: discPosition ? { x: discPosition.x, y: discPosition.y } : to.disc,
+    disc: discPosition,
   };
 }

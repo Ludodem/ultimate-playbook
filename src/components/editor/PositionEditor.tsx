@@ -2,7 +2,8 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Field } from "../field";
 import { PlaybackView } from "../playback";
-import { resolveDiscPosition, type Position } from "../../domain/disc";
+import { actionFileName, buildAction } from "../../domain/action";
+import type { Position } from "../../domain/disc";
 import { controlPointForMidpoint, curveMidpoint } from "../../domain/interpolation";
 import { MAX_RECOMMENDED_PER_TEAM, useActionEditorStore } from "../../state/actionEditorStore";
 import { FrameTimeline } from "./FrameTimeline";
@@ -15,6 +16,15 @@ export function PositionEditor() {
   const [viewMode, setViewMode] = useState<ViewMode>("edit");
   const [draftMidpoint, setDraftMidpoint] = useState<Position | null>(null);
   const [showGhostFrame, setShowGhostFrame] = useState(true);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const actionId = useActionEditorStore((s) => s.actionId);
+  const actionName = useActionEditorStore((s) => s.actionName);
+  const setActionName = useActionEditorStore((s) => s.setActionName);
+  const tags = useActionEditorStore((s) => s.tags);
+  const defaultTransitionMs = useActionEditorStore((s) => s.defaultTransitionMs);
+  const createdAt = useActionEditorStore((s) => s.createdAt);
+  const updatedAt = useActionEditorStore((s) => s.updatedAt);
+  const resetToSetup = useActionEditorStore((s) => s.resetToSetup);
   const fieldConfig = useActionEditorStore((s) => s.fieldConfig);
   const frames = useActionEditorStore((s) => s.frames);
   const currentFrameId = useActionEditorStore((s) => s.currentFrameId);
@@ -25,15 +35,33 @@ export function PositionEditor() {
   const moveDisc = useActionEditorStore((s) => s.moveDisc);
   const addEntity = useActionEditorStore((s) => s.addEntity);
   const removeEntity = useActionEditorStore((s) => s.removeEntity);
-  const assignDiscTo = useActionEditorStore((s) => s.assignDiscTo);
-  const freeDisc = useActionEditorStore((s) => s.freeDisc);
   const setDiscCurveControlPoint = useActionEditorStore((s) => s.setDiscCurveControlPoint);
   const undo = useActionEditorStore((s) => s.undo);
   const redo = useActionEditorStore((s) => s.redo);
   const past = useActionEditorStore((s) => s.past);
   const future = useActionEditorStore((s) => s.future);
 
-  if (!fieldConfig || !frame) return null;
+  if (!fieldConfig || !frame || !actionId || !createdAt || !updatedAt) return null;
+
+  const handleExport = () => {
+    const action = buildAction({
+      id: actionId,
+      name: actionName,
+      tags,
+      fieldConfig,
+      defaultTransitionMs,
+      frames,
+      createdAt,
+      updatedAt,
+    });
+    const blob = new Blob([JSON.stringify(action, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = actionFileName(actionName);
+    link.click();
+    URL.revokeObjectURL(url);
+  };
 
   const selectedEntity = frame.entities.find((e) => e.id === selectedEntityId) ?? null;
   const offenseCount = frame.entities.filter((e) => e.team === "offense").length;
@@ -46,89 +74,92 @@ export function PositionEditor() {
   const previousFrame = frame.parentId
     ? (frames.find((f) => f.id === frame.parentId) ?? null)
     : null;
-  const discFromPosition = previousFrame
-    ? resolveDiscPosition(previousFrame.disc, previousFrame.entities)
-    : null;
-  const discToPosition = resolveDiscPosition(frame.disc, frame.entities);
+  const discFromPosition = previousFrame ? previousFrame.disc : null;
+  const discToPosition = frame.disc;
   const discMoved =
     discFromPosition &&
-    discToPosition &&
     (discFromPosition.x !== discToPosition.x || discFromPosition.y !== discToPosition.y);
   const storedControlPoint = frame.incomingCurves?.disc;
   // Le sommet affiché/déplacé est le point réellement SUR la courbe (t=0.5),
   // pas le point de contrôle stocké — voir domain/interpolation.ts. Sans
   // courbe définie, les deux coïncident avec le milieu du segment droit.
-  const restingMidpoint =
-    discFromPosition && discToPosition
-      ? storedControlPoint
-        ? curveMidpoint(discFromPosition, storedControlPoint, discToPosition)
-        : {
-            x: (discFromPosition.x + discToPosition.x) / 2,
-            y: (discFromPosition.y + discToPosition.y) / 2,
-          }
-      : null;
+  const restingMidpoint = discFromPosition
+    ? storedControlPoint
+      ? curveMidpoint(discFromPosition, storedControlPoint, discToPosition)
+      : {
+          x: (discFromPosition.x + discToPosition.x) / 2,
+          y: (discFromPosition.y + discToPosition.y) / 2,
+        }
+    : null;
   const displayedMidpoint = draftMidpoint ?? restingMidpoint;
 
   return (
     <div className="editor">
-      <div className="view-mode-switch">
-        <button type="button" onClick={() => setViewMode("edit")} disabled={viewMode === "edit"}>
-          {t("editor.viewMode.edit")}
+      <div className="editor-topbar">
+        <button
+          type="button"
+          className="menu-toggle"
+          onClick={() => setMenuOpen((open) => !open)}
+          aria-expanded={menuOpen}
+          aria-label={t("editor.toolbar.menu")}
+        >
+          ☰
         </button>
-        <button type="button" onClick={() => setViewMode("play")} disabled={viewMode === "play"}>
-          {t("editor.viewMode.play")}
-        </button>
+        <div className="view-mode-switch">
+          <button type="button" onClick={() => setViewMode("edit")} disabled={viewMode === "edit"}>
+            {t("editor.viewMode.edit")}
+          </button>
+          <button type="button" onClick={() => setViewMode("play")} disabled={viewMode === "play"}>
+            {t("editor.viewMode.play")}
+          </button>
+        </div>
       </div>
+
+      {menuOpen && (
+        <div className="action-menu">
+          <input
+            type="text"
+            className="action-name-input"
+            value={actionName}
+            onChange={(e) => setActionName(e.target.value)}
+            aria-label={t("editor.setup.name")}
+          />
+          <div className="action-menu-buttons">
+            <button type="button" onClick={handleExport}>
+              {t("editor.toolbar.export")}
+            </button>
+            <button type="button" onClick={resetToSetup}>
+              {t("editor.toolbar.newAction")}
+            </button>
+          </div>
+        </div>
+      )}
 
       {viewMode === "play" ? (
         <PlaybackView />
       ) : (
-        <>
-          <div className="field-demo">
-            <Field
-              fieldConfig={fieldConfig}
-              frame={frame}
-              ghostFrame={showGhostFrame ? (previousFrame ?? undefined) : undefined}
-              interactive={{
-                selectedEntityId,
-                onEntitySelect: selectEntity,
-                onEntityMove: moveEntity,
-                onEntityDelete: removeEntity,
-                onDiscMove: moveDisc,
-                onFieldClick: (x, y) => {
-                  if (selectedEntityId) moveEntity(selectedEntityId, x, y);
-                },
-              }}
-              discCurveEditor={
-                discMoved && discFromPosition && discToPosition && displayedMidpoint
-                  ? {
-                      fromPosition: discFromPosition,
-                      toPosition: discToPosition,
-                      midpoint: displayedMidpoint,
-                      onDragMove: setDraftMidpoint,
-                      onDragEnd: (midpoint) => {
-                        setDiscCurveControlPoint(
-                          controlPointForMidpoint(discFromPosition, discToPosition, midpoint),
-                        );
-                        setDraftMidpoint(null);
-                      },
-                    }
-                  : undefined
-              }
-            />
+        <div className="edit-view">
+          <div className="toolbar">
+            <button type="button" onClick={() => addEntity("offense")}>
+              {t("editor.toolbar.addOffense")}
+            </button>
+            <button type="button" onClick={() => addEntity("defense")}>
+              {t("editor.toolbar.addDefense")}
+            </button>
+            <button type="button" onClick={undo} disabled={past.length === 0}>
+              {t("editor.toolbar.undo")}
+            </button>
+            <button type="button" onClick={redo} disabled={future.length === 0}>
+              {t("editor.toolbar.redo")}
+            </button>
           </div>
 
-          <p className="hint">{t("editor.toolbar.selectionHint")}</p>
-          {previousFrame && (
-            <label className="checkbox-option ghost-toggle">
-              <input
-                type="checkbox"
-                checked={showGhostFrame}
-                onChange={(e) => setShowGhostFrame(e.target.checked)}
-              />
-              {t("editor.toolbar.ghostFrameToggle")}
-            </label>
+          {showRosterWarning && (
+            <p className="warning">
+              {t("editor.toolbar.rosterWarning", { max: MAX_RECOMMENDED_PER_TEAM })}
+            </p>
           )}
+
           {discMoved && (
             <p className="hint">
               {t("editor.curve.hint")}
@@ -144,40 +175,47 @@ export function PositionEditor() {
             </p>
           )}
 
-          <div className="toolbar">
-            <button type="button" onClick={() => addEntity("offense")}>
-              {t("editor.toolbar.addOffense")}
-            </button>
-            <button type="button" onClick={() => addEntity("defense")}>
-              {t("editor.toolbar.addDefense")}
-            </button>
-            <button type="button" onClick={undo} disabled={past.length === 0}>
-              {t("editor.toolbar.undo")}
-            </button>
-            <button type="button" onClick={redo} disabled={future.length === 0}>
-              {t("editor.toolbar.redo")}
-            </button>
-            {frame.disc.heldBy && (
-              <button type="button" onClick={freeDisc}>
-                {t("editor.toolbar.freeDisc")}
-              </button>
-            )}
+          <div className="field-stage">
+            <div className="field-demo">
+              <Field
+                fieldConfig={fieldConfig}
+                frame={frame}
+                ghostFrame={showGhostFrame ? (previousFrame ?? undefined) : undefined}
+                interactive={{
+                  selectedEntityId,
+                  onEntitySelect: selectEntity,
+                  onEntityMove: moveEntity,
+                  onEntityDelete: removeEntity,
+                  onDiscMove: moveDisc,
+                  onFieldClick: (x, y) => {
+                    if (selectedEntityId) moveEntity(selectedEntityId, x, y);
+                  },
+                }}
+                discCurveEditor={
+                  discMoved && discFromPosition && displayedMidpoint
+                    ? {
+                        fromPosition: discFromPosition,
+                        toPosition: discToPosition,
+                        midpoint: displayedMidpoint,
+                        onDragMove: setDraftMidpoint,
+                        onDragEnd: (midpoint) => {
+                          setDiscCurveControlPoint(
+                            controlPointForMidpoint(discFromPosition, discToPosition, midpoint),
+                          );
+                          setDraftMidpoint(null);
+                        },
+                      }
+                    : undefined
+                }
+              />
+            </div>
           </div>
-
-          {showRosterWarning && (
-            <p className="warning">
-              {t("editor.toolbar.rosterWarning", { max: MAX_RECOMMENDED_PER_TEAM })}
-            </p>
-          )}
 
           {selectedEntity && (
             <div className="selection-panel">
               <span>
                 {selectedEntity.label} ({selectedEntity.team})
               </span>
-              <button type="button" onClick={() => assignDiscTo(selectedEntity.id)}>
-                {t("editor.toolbar.giveDisc")}
-              </button>
               <button type="button" onClick={() => removeEntity(selectedEntity.id)}>
                 {t("editor.toolbar.remove")}
               </button>
@@ -187,8 +225,22 @@ export function PositionEditor() {
             </div>
           )}
 
+          <div className="edit-hints">
+            <p className="hint">{t("editor.toolbar.selectionHint")}</p>
+            {previousFrame && (
+              <label className="checkbox-option ghost-toggle">
+                <input
+                  type="checkbox"
+                  checked={showGhostFrame}
+                  onChange={(e) => setShowGhostFrame(e.target.checked)}
+                />
+                {t("editor.toolbar.ghostFrameToggle")}
+              </label>
+            )}
+          </div>
+
           <FrameTimeline />
-        </>
+        </div>
       )}
     </div>
   );

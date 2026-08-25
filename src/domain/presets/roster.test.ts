@@ -28,18 +28,27 @@ describe.each<[string, () => RosterPreset]>([
   ["vertical stack", fiveVFiveVerticalStackPreset],
   ["horizontal stack", fiveVFiveHorizontalStackPreset],
 ])("5v5 %s preset", (_label, buildPreset) => {
-  it("has 5 offense, 5 defense, valid coordinates and exactly one disc holder", () => {
+  it("has 5 offense, 5 defense, valid coordinates and the disc placed on H1", () => {
     const { entities, disc } = buildPreset();
 
     expect(entities.filter((e) => e.team === "offense")).toHaveLength(5);
     expect(entities.filter((e) => e.team === "defense")).toHaveLength(5);
     expectValidCoordinates(entities);
 
-    const holders = entities.filter((e) => e.hasDisc);
-    expect(holders).toHaveLength(1);
-    expect(disc.heldBy).toBe(holders[0].id);
-    expect(disc.x).toBe(holders[0].x);
-    expect(disc.y).toBe(holders[0].y);
+    const h1 = entities.find((e) => e.label === "H1")!;
+    expect(disc).toEqual({ x: h1.x, y: h1.y });
+  });
+
+  it("marks each handler (H1/H2) with a defender positioned in front of them, not just beside them", () => {
+    const { entities } = buildPreset();
+    const h1 = entities.find((e) => e.label === "H1")!;
+    const h2 = entities.find((e) => e.label === "H2")!;
+    const d1 = entities.find((e) => e.label === "D1")!;
+    const d2 = entities.find((e) => e.label === "D2")!;
+
+    // "Devant" = plus proche de la direction d'attaque (y=0) que le handler marqué.
+    expect(d1.y).toBeLessThan(h1.y);
+    expect(d2.y).toBeLessThan(h2.y);
   });
 
   it("gives every entity a unique id and label", () => {

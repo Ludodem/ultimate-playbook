@@ -76,13 +76,19 @@ Fait partie du périmètre MVP (voir `docs/PRD.md` §4.5) mais s'implémente com
 
 ## Phase 7 — Persistance locale
 
-- [ ] `libraryStore` : sauvegarde/chargement des actions en localStorage (clé namespacée, voir `docs/DATA_MODEL.md` §6).
-- [ ] Export d'une action en fichier JSON téléchargeable.
-- [ ] Import d'un fichier JSON avec validation de schéma (`schemaVersion`, champs obligatoires) et message d'erreur clair si invalide.
-- [ ] Test de non-régression : créer une action, recharger la page, vérifier qu'elle est toujours présente.
+- [x] `libraryStore` : sauvegarde/chargement des actions en localStorage (clé namespacée, voir `docs/DATA_MODEL.md` §6) — `src/state/libraryStore.ts` (dictionnaire `{ [actionId]: Action }` sous `ultimate-playbook:actions`, + pointeur `ultimate-playbook:last-action-id` pour la reprise automatique).
+- [x] Export d'une action en fichier JSON téléchargeable — bouton dans `PositionEditor.tsx` (`handleExport`), nom de fichier dérivé du nom de l'action (`actionFileName`, `src/domain/action.ts`).
+- [x] Import d'un fichier JSON avec validation de schéma (`schemaVersion`, champs obligatoires) et message d'erreur clair si invalide — bouton dans `NewActionSetup.tsx`, validation via `validateAction` (`src/domain/action.ts`) qui vérifie chaque champ requis (dont l'unicité de la frame racine) et renvoie un message d'erreur explicite sinon.
+- [x] Test de non-régression : créer une action, recharger la page, vérifier qu'elle est toujours présente — sauvegarde automatique (pas de bouton "Enregistrer" dédié) : `actionEditorStore` s'abonne à ses propres changements et réécrit l'action dans `libraryStore` dès que `frames`/`fieldConfig`/`actionName`/`tags`/`defaultTransitionMs` changent ; `App.tsx` recharge la dernière action active (`getLastActiveActionId`) au montage. Vérifié manuellement (voir aussi tests unitaires `domain/action.test.ts` et `state/libraryStore.test.ts`).
+- Note d'implémentation : `actionEditorStore` ne modélisait jusqu'ici que `fieldConfig`/`frames` (pas d'`id`/`name`/`tags`/`defaultTransitionMs`/`createdAt`/`updatedAt`) — étendu pour porter ces métadonnées d'`Action`, avec `start()` qui prend désormais un nom, `loadAction()` (reprise/import) et `resetToSetup()` ("Nouvelle action", n'efface pas l'action de la bibliothèque, la désactive juste comme action active). Pas de bibliothèque/liste d'actions au MVP (post-MVP) : une seule action "active" à la fois, reprise automatiquement au chargement.
 
 ## Phase 8 — Responsive & polish tactile
 
+Découpage issu des retours utilisateur post-Phase 7 (terrain trop petit sur mobile, disque "tenu" confus, placement par défaut du marquage handler incorrect).
+
+- [x] Terrain plein écran sur mobile, reste de l'UI compacté sans scroll de page : nom/export/nouvelle action repliés derrière un menu ☰ (`editor-topbar`/`action-menu`), `Éditer`/`Jouer` compact, `.editor` en colonne flex `height:100dvh` avec `.field-stage` en `flex:1` et la timeline des frames en bloc sticky en bas (`max-height:38vh`, scroll interne, chips/boutons en scroll horizontal). _Écart par rapport à l'idée initiale de boutons flottants **directement sur le canvas** : un essai a montré que ça masque des joueurs sous une zone opaque — inacceptable pour un outil de positionnement — donc la toolbar/les hints restent en flux normal au-dessus du terrain plutôt qu'en overlay sur le dessin lui-même ; le terrain profite quand même de tout l'espace vertical restant une fois le chrome compacté. `overflow-y:auto` (pas `hidden`) sur `.editor` en filet de sécurité si un contenu (mode lecture avec embranchements) dépasse malgré tout la hauteur d'écran._
+- [x] Disque toujours en position libre (suppression du concept "tenu par un joueur" — `Disc.heldBy`/`Entity.hasDisc` — et des boutons "Donner le disque"/"Libérer le disque" associés) ; positionnement uniquement par glisser-déposer direct. Écart par rapport à `docs/DATA_MODEL.md` tel qu'écrit initialement — voir journal de décisions `docs/ARCHITECTURE.md` §8.
+- [x] Correction du placement par défaut du défenseur marquant un handler dans les presets d'effectif (`fiveVFiveVerticalStackPreset`/`fiveVFiveHorizontalStackPreset`) : devant lui (côté terrain d'attaque), pas simplement décalé sur le côté comme pour les cutters — voir `docs/ARCHITECTURE.md` §8.
 - [ ] Vérification et ajustement de l'UI sur les trois formats cibles (PC, tablette, smartphone).
 - [ ] Tailles de cibles tactiles suffisantes (boutons, poignées de drag).
 - [ ] Passage en revue des critères de succès du MVP (`docs/PRD.md` §7).

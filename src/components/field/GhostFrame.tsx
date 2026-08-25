@@ -1,5 +1,4 @@
 import { Circle, Group, Text } from "react-konva";
-import { resolveDiscPosition } from "../../domain/disc";
 import type { Frame } from "../../domain/models";
 import { DISC_FILL_COLOR, DISC_STROKE_COLOR, ENTITY_COLORS, ENTITY_LABEL_COLOR } from "./theme";
 
@@ -19,8 +18,6 @@ const GHOST_OPACITY = 0.3;
  * immédiatement ce qui a changé sans polluer la lecture de la frame en cours.
  */
 export function GhostFrame({ frame, toX, toY, entityRadius, discRadius }: GhostFrameProps) {
-  const discPosition = resolveDiscPosition(frame.disc, frame.entities);
-
   return (
     <Group opacity={GHOST_OPACITY} listening={false}>
       {frame.entities.map((entity) => (
@@ -46,16 +43,14 @@ export function GhostFrame({ frame, toX, toY, entityRadius, discRadius }: GhostF
         </Group>
       ))}
 
-      {discPosition && (
-        <Circle
-          x={toX(discPosition.x)}
-          y={toY(discPosition.y)}
-          radius={discRadius}
-          fill={DISC_FILL_COLOR}
-          stroke={DISC_STROKE_COLOR}
-          strokeWidth={1.5}
-        />
-      )}
+      <Circle
+        x={toX(frame.disc.x)}
+        y={toY(frame.disc.y)}
+        radius={discRadius}
+        fill={DISC_FILL_COLOR}
+        stroke={DISC_STROKE_COLOR}
+        strokeWidth={1.5}
+      />
     </Group>
   );
 }

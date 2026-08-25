@@ -44,16 +44,16 @@ export interface Entity {
   x: number;
   /** Position en % de la longueur du terrain (0-100). */
   y: number;
-  /** Au plus une entité à true par frame. */
-  hasDisc?: boolean;
 }
 
+/**
+ * Position du disque, toujours libre (pas d'attache à un joueur — voir
+ * `docs/ARCHITECTURE.md` §8) : positionné par glisser-déposer direct sur le terrain.
+ */
 export interface Disc {
-  /** Id d'une Entity, si le disque est en main. */
-  heldBy?: string;
-  /** Position libre si heldBy est absent ; peut sortir de [0,100] (sideline). */
-  x?: number;
-  y?: number;
+  /** Peut sortir de [0,100] (sideline), comme les positions des entités. */
+  x: number;
+  y: number;
 }
 
 export interface CurveControlPoint {

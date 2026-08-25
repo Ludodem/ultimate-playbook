@@ -15,20 +15,25 @@
       "rosterEmpty": "Vide",
       "rosterVertical": "5v5 — Stack vertical",
       "rosterHorizontal": "5v5 — Stack horizontal",
-      "start": "Commencer"
+      "name": "Nom de l'action",
+      "defaultName": "Nouvelle action",
+      "start": "Commencer",
+      "import": "Importer un fichier JSON",
+      "importParseError": "Fichier illisible : ce n'est pas un JSON valide."
     },
     "toolbar": {
+      "menu": "Menu",
       "addOffense": "+ Attaque",
       "addDefense": "+ Défense",
       "undo": "Annuler",
       "redo": "Rétablir",
       "rosterWarning": "Effectif élevé : l'affichage peut devenir difficile à lire au-delà de {{max}} joueurs par équipe.",
-      "giveDisc": "🥏 Donner le disque",
-      "freeDisc": "Libérer le disque",
       "remove": "Supprimer",
       "deselect": "Désélectionner",
       "selectionHint": "Astuce : sélectionnez un joueur puis tapez sur le terrain pour le déplacer, en plus du glisser-déposer.",
-      "ghostFrameToggle": "Afficher la frame précédente en fantôme"
+      "ghostFrameToggle": "Afficher la frame précédente en fantôme",
+      "export": "⭳ Exporter (JSON)",
+      "newAction": "Nouvelle action"
     },
     "frames": {
       "title": "Frames",

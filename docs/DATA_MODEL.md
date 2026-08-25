@@ -68,13 +68,12 @@ interface Entity {
   label: string; // ex: "1", "H1", "D3" — libre
   x: number; // % de la largeur ; peut sortir de [0,100] pour une position hors-ligne (sideline), voir §1
   y: number; // 0-100, position sur la longueur
-  hasDisc?: boolean; // au plus une entité à true par frame
 }
 ```
 
 Règles :
 
-- Le disque n'est **pas** une entité de la liste `entities` : c'est un objet séparé au niveau de la frame (voir §3), qui peut soit être lié à une entité (`heldBy`), soit avoir une position libre (passe en vol).
+- Le disque n'est **pas** une entité de la liste `entities` : c'est un objet séparé au niveau de la frame (voir §3), toujours en position libre (voir §8, journal de décisions).
 - Le nombre d'entités par équipe n'est pas plafonné techniquement, mais l'UI doit avertir/limiter au-delà d'un seuil raisonnable (suggestion : 15 par équipe) pour rester lisible.
 - Les `id` des entités restent stables à travers toutes les frames d'une même action (permet d'interpoler la trajectoire d'un joueur donné entre deux frames).
 
@@ -82,9 +81,11 @@ Règles :
 
 ```ts
 interface Disc {
-  heldBy?: string; // id d'une Entity, si le disque est en main
-  x?: number; // position libre si heldBy est absent ; peut sortir de [0,100], voir §1 "Marge sideline"
-  y?: number;
+  // Toujours une position libre (pas d'attache à un joueur) — voir
+  // docs/ARCHITECTURE.md §8 : au réel, aucun joueur ne se déplace disque en
+  // main, donc rien ne justifiait de "coller" le disque à une entité.
+  x: number; // peut sortir de [0,100], voir §1 "Marge sideline"
+  y: number;
 }
 
 interface Frame {

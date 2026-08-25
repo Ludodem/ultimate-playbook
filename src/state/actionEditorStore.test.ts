@@ -7,7 +7,7 @@ import { useActionEditorStore } from "./actionEditorStore";
 const fieldConfig = getFieldPreset("half");
 
 function startEmpty() {
-  useActionEditorStore.getState().start(fieldConfig, emptyPreset());
+  useActionEditorStore.getState().start(fieldConfig, emptyPreset(), "Test action");
 }
 
 function currentFrame() {
@@ -43,19 +43,15 @@ describe("actionEditorStore", () => {
     expect(defenseLabels).toEqual(["1"]);
   });
 
-  it("moveEntity() / assignDiscTo() / freeDisc() / removeEntity() behave as in Phase 3, scoped to the current frame", () => {
-    const { addEntity, moveEntity, assignDiscTo, freeDisc, removeEntity } =
-      useActionEditorStore.getState();
+  it("moveEntity() / moveDisc() / removeEntity() behave as in Phase 3, scoped to the current frame", () => {
+    const { addEntity, moveEntity, moveDisc, removeEntity } = useActionEditorStore.getState();
     addEntity("offense");
     const id = currentFrame().entities[0].id;
 
     moveEntity(id, 12, 34);
     expect(currentFrame().entities[0]).toMatchObject({ x: 12, y: 34 });
 
-    assignDiscTo(id);
-    expect(currentFrame().disc).toEqual({ heldBy: id });
-
-    freeDisc();
+    moveDisc(12, 34);
     expect(currentFrame().disc).toEqual({ x: 12, y: 34 });
 
     removeEntity(id);
@@ -76,13 +72,12 @@ describe("actionEditorStore", () => {
 
     it("copies the current frame's entities/disc into the new frame", () => {
       useActionEditorStore.getState().addEntity("offense");
-      const id = currentFrame().entities[0].id;
-      useActionEditorStore.getState().assignDiscTo(id);
+      useActionEditorStore.getState().moveDisc(12, 34);
 
       useActionEditorStore.getState().addNextFrame();
 
       expect(currentFrame().entities).toHaveLength(1);
-      expect(currentFrame().disc).toEqual({ heldBy: id });
+      expect(currentFrame().disc).toEqual({ x: 12, y: 34 });
     });
 
     it("is a no-op when the current frame already has a child", () => {
@@ -203,8 +198,7 @@ describe("actionEditorStore", () => {
   describe("setDiscCurveControlPoint", () => {
     it("stores a control point for the disc on the current frame", () => {
       useActionEditorStore.getState().addEntity("offense");
-      const id = currentFrame().entities[0].id;
-      useActionEditorStore.getState().assignDiscTo(id);
+      useActionEditorStore.getState().moveDisc(70, 30);
       useActionEditorStore.getState().addNextFrame();
 
       useActionEditorStore.getState().setDiscCurveControlPoint({ x: 70, y: 20 });

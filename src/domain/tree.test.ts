@@ -16,7 +16,7 @@ function frame(id: string, parentId: string | null, siblingOrder = 0, branchLabe
     siblingOrder,
     branchLabel,
     entities: [],
-    disc: {},
+    disc: { x: 50, y: 50 },
   };
 }
 
