@@ -64,38 +64,42 @@ export function StepPlayback() {
     : currentFrame;
 
   return (
-    <div className="playback">
-      <div className="field-demo">
-        <Field
-          fieldConfig={fieldConfig}
-          frame={displayFrame}
-          nextFrame={!isAnimating && children.length === 1 ? children[0] : undefined}
-        />
+    <>
+      <div className="field-stage">
+        <div className="field-demo">
+          <Field
+            fieldConfig={fieldConfig}
+            frame={displayFrame}
+            nextFrame={!isAnimating && children.length === 1 ? children[0] : undefined}
+          />
+        </div>
       </div>
 
-      {currentFrame.note && <p className="frame-note-display">{currentFrame.note}</p>}
+      <div className="overlay-stack overlay-stack-bottom">
+        {currentFrame.note && <p className="frame-note-display overlay-bar">{currentFrame.note}</p>}
 
-      <div className="playback-controls">
-        <button
-          type="button"
-          onClick={() => currentFrame.parentId && setCurrentFrameId(currentFrame.parentId)}
-          disabled={!currentFrame.parentId || isAnimating}
-        >
-          {t("playback.previous")}
-        </button>
-
-        {children.length === 1 && (
-          <button type="button" onClick={() => advanceTo(children[0].id)} disabled={isAnimating}>
-            {t("playback.next")}
-          </button>
+        {children.length > 1 && (
+          <ForkChoice options={children} onChoose={advanceTo} disabled={isAnimating} />
         )}
 
-        {children.length === 0 && <span className="playback-end">{t("playback.end")}</span>}
-      </div>
+        <div className="playback-controls overlay-bar">
+          <button
+            type="button"
+            onClick={() => currentFrame.parentId && setCurrentFrameId(currentFrame.parentId)}
+            disabled={!currentFrame.parentId || isAnimating}
+          >
+            {t("playback.previous")}
+          </button>
 
-      {children.length > 1 && (
-        <ForkChoice options={children} onChoose={advanceTo} disabled={isAnimating} />
-      )}
-    </div>
+          {children.length === 1 && (
+            <button type="button" onClick={() => advanceTo(children[0].id)} disabled={isAnimating}>
+              {t("playback.next")}
+            </button>
+          )}
+
+          {children.length === 0 && <span className="playback-end">{t("playback.end")}</span>}
+        </div>
+      </div>
+    </>
   );
 }

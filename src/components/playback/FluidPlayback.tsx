@@ -96,41 +96,45 @@ export function FluidPlayback() {
       : path[path.length - 1];
 
   return (
-    <div className="playback">
-      <div className="field-demo">
-        <Field fieldConfig={fieldConfig} frame={displayFrame} />
+    <>
+      <div className="field-stage">
+        <div className="field-demo">
+          <Field fieldConfig={fieldConfig} frame={displayFrame} />
+        </div>
       </div>
 
-      {!isPathComplete && <ForkChoice options={pendingOptions} onChoose={handleChoose} />}
+      <div className="overlay-stack overlay-stack-bottom">
+        {!isPathComplete && <ForkChoice options={pendingOptions} onChoose={handleChoose} />}
 
-      {isPathComplete && (
-        <div className="playback-controls">
-          <button type="button" onClick={handleTogglePlay} disabled={!canPlay}>
-            {isPlaying && !atEnd ? t("playback.pause") : t("playback.play")}
-          </button>
-          <button type="button" onClick={handleRestart}>
-            {t("playback.restart")}
-          </button>
-          {Object.keys(choices).length > 0 && (
-            <button type="button" onClick={handleChangePath}>
-              {t("playback.changePath")}
+        {isPathComplete && (
+          <div className="playback-controls overlay-bar">
+            <button type="button" onClick={handleTogglePlay} disabled={!canPlay}>
+              {isPlaying && !atEnd ? t("playback.pause") : t("playback.play")}
             </button>
-          )}
-          <div className="speed-selector">
-            <span>{t("playback.speed")}</span>
-            {SPEED_OPTIONS.map((speed) => (
-              <button
-                key={speed}
-                type="button"
-                className={speed === speedMultiplier ? "is-current" : ""}
-                onClick={() => setSpeedMultiplier(speed)}
-              >
-                {speed}×
+            <button type="button" onClick={handleRestart}>
+              {t("playback.restart")}
+            </button>
+            {Object.keys(choices).length > 0 && (
+              <button type="button" onClick={handleChangePath}>
+                {t("playback.changePath")}
               </button>
-            ))}
+            )}
+            <div className="speed-selector">
+              <span>{t("playback.speed")}</span>
+              {SPEED_OPTIONS.map((speed) => (
+                <button
+                  key={speed}
+                  type="button"
+                  className={speed === speedMultiplier ? "is-current" : ""}
+                  onClick={() => setSpeedMultiplier(speed)}
+                >
+                  {speed}×
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </>
   );
 }

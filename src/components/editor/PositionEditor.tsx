@@ -148,43 +148,9 @@ export function PositionEditor() {
       {viewMode === "play" ? (
         <PlaybackView />
       ) : (
-        <div className="edit-view">
-          <div className="toolbar">
-            <button type="button" onClick={() => addEntity("offense")}>
-              {t("editor.toolbar.addOffense")}
-            </button>
-            <button type="button" onClick={() => addEntity("defense")}>
-              {t("editor.toolbar.addDefense")}
-            </button>
-            <button type="button" onClick={undo} disabled={past.length === 0}>
-              {t("editor.toolbar.undo")}
-            </button>
-            <button type="button" onClick={redo} disabled={future.length === 0}>
-              {t("editor.toolbar.redo")}
-            </button>
-          </div>
-
-          {showRosterWarning && (
-            <p className="warning">
-              {t("editor.toolbar.rosterWarning", { max: MAX_RECOMMENDED_PER_TEAM })}
-            </p>
-          )}
-
-          {discMoved && (
-            <p className="hint">
-              {t("editor.curve.hint")}
-              {storedControlPoint && (
-                <button
-                  type="button"
-                  className="curve-reset"
-                  onClick={() => setDiscCurveControlPoint(null)}
-                >
-                  {t("editor.curve.reset")}
-                </button>
-              )}
-            </p>
-          )}
-
+        <>
+          {/* Terrain plein écran (voir docs/ARCHITECTURE.md §8) : couche de fond,
+              tout le reste de l'UI flotte par-dessus en overlay translucide. */}
           <div className="field-stage">
             <div className="field-demo">
               <Field
@@ -221,22 +187,62 @@ export function PositionEditor() {
             </div>
           </div>
 
-          {selectedEntity && (
-            <div className="selection-panel">
-              <span>
-                {selectedEntity.label} ({selectedEntity.team})
-              </span>
-              <button type="button" onClick={() => removeEntity(selectedEntity.id)}>
-                {t("editor.toolbar.remove")}
+          <div className="overlay-stack overlay-stack-top">
+            <div className="toolbar overlay-bar">
+              <button type="button" onClick={() => addEntity("offense")}>
+                {t("editor.toolbar.addOffense")}
               </button>
-              <button type="button" onClick={() => selectEntity(null)}>
-                {t("editor.toolbar.deselect")}
+              <button type="button" onClick={() => addEntity("defense")}>
+                {t("editor.toolbar.addDefense")}
+              </button>
+              <button type="button" onClick={undo} disabled={past.length === 0}>
+                {t("editor.toolbar.undo")}
+              </button>
+              <button type="button" onClick={redo} disabled={future.length === 0}>
+                {t("editor.toolbar.redo")}
               </button>
             </div>
-          )}
 
-          <FrameTimeline />
-        </div>
+            {showRosterWarning && (
+              <p className="warning overlay-bar">
+                {t("editor.toolbar.rosterWarning", { max: MAX_RECOMMENDED_PER_TEAM })}
+              </p>
+            )}
+
+            {discMoved && (
+              <p className="hint overlay-bar">
+                {t("editor.curve.hint")}
+                {storedControlPoint && (
+                  <button
+                    type="button"
+                    className="curve-reset"
+                    onClick={() => setDiscCurveControlPoint(null)}
+                  >
+                    {t("editor.curve.reset")}
+                  </button>
+                )}
+              </p>
+            )}
+          </div>
+
+          <div className="overlay-stack overlay-stack-bottom">
+            {selectedEntity && (
+              <div className="selection-panel overlay-bar">
+                <span>
+                  {selectedEntity.label} ({selectedEntity.team})
+                </span>
+                <button type="button" onClick={() => removeEntity(selectedEntity.id)}>
+                  {t("editor.toolbar.remove")}
+                </button>
+                <button type="button" onClick={() => selectEntity(null)}>
+                  {t("editor.toolbar.deselect")}
+                </button>
+              </div>
+            )}
+
+            <FrameTimeline />
+          </div>
+        </>
       )}
     </div>
   );

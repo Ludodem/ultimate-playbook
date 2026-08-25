@@ -11,16 +11,18 @@ export function PlaybackView() {
   const [mode, setMode] = useState<PlaybackMode>("step");
 
   return (
-    <div className="playback-view">
-      <div className="playback-mode-switch">
-        <button type="button" onClick={() => setMode("step")} disabled={mode === "step"}>
-          {t("playback.mode.step")}
-        </button>
-        <button type="button" onClick={() => setMode("fluid")} disabled={mode === "fluid"}>
-          {t("playback.mode.fluid")}
-        </button>
+    <>
+      <div className="overlay-stack overlay-stack-top">
+        <div className="playback-mode-switch overlay-bar">
+          <button type="button" onClick={() => setMode("step")} disabled={mode === "step"}>
+            {t("playback.mode.step")}
+          </button>
+          <button type="button" onClick={() => setMode("fluid")} disabled={mode === "fluid"}>
+            {t("playback.mode.fluid")}
+          </button>
+        </div>
       </div>
       {mode === "step" ? <StepPlayback /> : <FluidPlayback />}
-    </div>
+    </>
   );
 }
