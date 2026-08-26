@@ -39,20 +39,23 @@ export interface FrameSegment {
 }
 
 /**
- * Un embranchement rencontré sur le chemin, où qu'il soit (avant, à, ou après
+ * Une branche rencontrée sur le chemin, où qu'elle soit (avant, à, ou après
  * la frame courante) — voir docs/PRD.md §4.8 et le retour utilisateur qui a
  * motivé ce type ("on ne comprend pas où sont les branches, sur laquelle on
- * est"). `activeId` est l'option sur le chemin déjà emprunté (`null` si
- * l'embranchement est la frame courante elle-même et qu'aucune option n'a
- * encore été choisie).
+ * est"). `options` liste tous les enfants de la frame qui bifurque à cet
+ * endroit (peut n'en contenir qu'un seul : dès qu'une branche est créée, elle
+ * doit apparaître ici, même avant qu'une deuxième option n'existe — sinon
+ * créer la toute première branche ne produit aucun retour visuel). `activeId`
+ * est l'option sur le chemin déjà empruntée (`null` si la frame courante est
+ * elle-même l'embranchement et qu'aucune option n'a encore été choisie).
  */
-export interface ForkSegment {
-  kind: "fork";
+export interface BranchSegment {
+  kind: "branch";
   options: Frame[];
   activeId: string | null;
 }
 
-export type PathSegment = FrameSegment | ForkSegment;
+export type PathSegment = FrameSegment | BranchSegment;
 
 export interface CurrentPathView {
   segments: PathSegment[];
@@ -62,7 +65,7 @@ export interface CurrentPathView {
  * Vue compacte "où en est-on dans l'arbre" pour la barre Frames (voir
  * docs/PRD.md §4.8) : pas tout l'arbre, seulement le chemin qui passe par la
  * frame courante, étendu au maximum sans ambiguïté dans les deux sens, avec
- * un segment "fork" à chaque embranchement traversé (choisi ou non). Naviguer
+ * un segment "branch" à chaque branche traversée (choisie ou non). Naviguer
  * vers une branche déjà explorée mais absente de ce chemin se fait en deux
  * temps (remonter jusqu'à son embranchement, puis la choisir) plutôt qu'en un
  * raccourci direct — compromis délibéré pour garder cette barre toujours
@@ -96,18 +99,18 @@ export function computeCurrentPathView(
   const chain = [...ancestors, current, ...descendants];
   const segments: PathSegment[] = [];
   for (let i = 0; i < chain.length; i++) {
-    if (i > 0) {
+    // Une frame avec un `branchLabel` est une branche dès sa création, que sa
+    // frame parente ait déjà une deuxième option ou non (voir `BranchSegment`).
+    if (i > 0 && chain[i].branchLabel !== undefined) {
       const siblings = getChildren(frames, chain[i - 1].id);
-      if (siblings.length > 1) {
-        segments.push({ kind: "fork", options: siblings, activeId: chain[i].id });
-      }
+      segments.push({ kind: "branch", options: siblings, activeId: chain[i].id });
     }
     segments.push({ kind: "frame", frame: chain[i] });
   }
 
   const tailChildren = getChildren(frames, tail.id);
   if (tailChildren.length > 1) {
-    segments.push({ kind: "fork", options: tailChildren, activeId: null });
+    segments.push({ kind: "branch", options: tailChildren, activeId: null });
   }
 
   return { segments };

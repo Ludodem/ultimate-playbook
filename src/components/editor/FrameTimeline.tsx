@@ -38,9 +38,9 @@ export function FrameTimeline() {
   // rester lisible même sans repérer visuellement les pastilles colorées.
   const activeBranch = [...segments]
     .reverse()
-    .find((s) => s.kind === "fork" && s.activeId !== null);
+    .find((s) => s.kind === "branch" && s.activeId !== null);
   const activeBranchLabel =
-    activeBranch?.kind === "fork"
+    activeBranch?.kind === "branch"
       ? activeBranch.options.find((o) => o.id === activeBranch.activeId)?.branchLabel
       : undefined;
 
@@ -52,11 +52,23 @@ export function FrameTimeline() {
     setIsAddingBranch(false);
   };
 
-  // Numérotation d'affichage (1, 2, 3...) des seuls segments "frame", calculée
+  // Numérotation d'affichage (1, 2, 3...) des seuls segments "frame", et
+  // couleur de branche à reporter sur les frames qui en font partie (toutes
+  // celles qui suivent un embranchement résolu, jusqu'au suivant) — calculées
   // à part pour ne pas muter de variable pendant le rendu du `.map` ci-dessous.
   const frameNumbers = new Map<string, number>();
+  const frameBranchColors = new Map<string, number>();
+  let activeColorIndex: number | null = null;
   for (const segment of segments) {
-    if (segment.kind === "frame") frameNumbers.set(segment.frame.id, frameNumbers.size + 1);
+    if (segment.kind === "branch") {
+      activeColorIndex =
+        segment.activeId !== null
+          ? segment.options.findIndex((o) => o.id === segment.activeId) % BRANCH_COLOR_COUNT
+          : activeColorIndex;
+    } else {
+      frameNumbers.set(segment.frame.id, frameNumbers.size + 1);
+      if (activeColorIndex !== null) frameBranchColors.set(segment.frame.id, activeColorIndex);
+    }
   }
 
   return (
@@ -69,11 +81,13 @@ export function FrameTimeline() {
         {segments.map((segment, index) => {
           if (segment.kind === "frame") {
             const frameNumber = frameNumbers.get(segment.frame.id);
+            const colorIndex = frameBranchColors.get(segment.frame.id);
+            const colorClass = colorIndex !== undefined ? ` branch-color-${colorIndex}` : "";
             return (
               <button
                 key={segment.frame.id}
                 type="button"
-                className={`frame-chip${segment.frame.id === currentFrameId ? " is-current" : ""}`}
+                className={`frame-chip${segment.frame.id === currentFrameId ? " is-current" : ""}${colorClass}`}
                 onClick={() => selectFrame(segment.frame.id)}
                 aria-label={t("editor.frames.jumpTo", { n: frameNumber })}
               >
@@ -82,7 +96,7 @@ export function FrameTimeline() {
             );
           }
           return (
-            <div className="branch-tabs" key={`fork-${index}`}>
+            <div className="branch-tabs" key={`branch-${index}`}>
               {segment.options.map((option, optionIndex) => (
                 <button
                   key={option.id}

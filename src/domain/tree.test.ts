@@ -12,7 +12,7 @@ import {
 
 function describeSegments(segments: PathSegment[]) {
   return segments.map((s) =>
-    s.kind === "frame" ? s.frame.id : { fork: s.options.map((o) => o.id), active: s.activeId },
+    s.kind === "frame" ? s.frame.id : { branch: s.options.map((o) => o.id), active: s.activeId },
   );
 }
 
@@ -29,14 +29,16 @@ function frame(id: string, parentId: string | null, siblingOrder = 0, branchLabe
 
 // Arbre de test :
 //   root -> a -> b -+-> c1 (label "Autour")
-//                    +-> c2 (label "Strike") -> d
+//                    +-> c2 (label "Strike") -> d -> e (label "Contre", seule
+//                                                       option pour l'instant)
 const root = frame("root", null);
 const a = frame("a", "root");
 const b = frame("b", "a");
 const c1 = frame("c1", "b", 0, "Autour");
 const c2 = frame("c2", "b", 1, "Strike");
 const d = frame("d", "c2");
-const frames = [root, a, b, c1, c2, d];
+const e = frame("e", "d", 0, "Contre");
+const frames = [root, a, b, c1, c2, d, e];
 
 describe("getRootFrame", () => {
   it("finds the frame with parentId === null", () => {
@@ -54,7 +56,7 @@ describe("getChildren", () => {
   });
 
   it("returns an empty array for a leaf", () => {
-    expect(getChildren(frames, "d")).toEqual([]);
+    expect(getChildren(frames, "e")).toEqual([]);
   });
 });
 
@@ -71,11 +73,11 @@ describe("isForkFrame", () => {
 
 describe("getSubtreeIds", () => {
   it("includes the frame itself and all its descendants", () => {
-    expect(new Set(getSubtreeIds(frames, "b"))).toEqual(new Set(["b", "c1", "c2", "d"]));
+    expect(new Set(getSubtreeIds(frames, "b"))).toEqual(new Set(["b", "c1", "c2", "d", "e"]));
   });
 
   it("is just the frame itself for a leaf", () => {
-    expect(getSubtreeIds(frames, "d")).toEqual(["d"]);
+    expect(getSubtreeIds(frames, "e")).toEqual(["e"]);
   });
 });
 
@@ -87,7 +89,7 @@ describe("resolvePath", () => {
 
   it("follows the chosen branch at a fork", () => {
     const path = resolvePath(frames, { b: "c2" });
-    expect(path.map((f) => f.id)).toEqual(["root", "a", "b", "c2", "d"]);
+    expect(path.map((f) => f.id)).toEqual(["root", "a", "b", "c2", "d", "e"]);
   });
 
   it("stops at a fork when the other branch is chosen", () => {
@@ -101,39 +103,43 @@ describe("resolvePath", () => {
 });
 
 describe("computeCurrentPathView", () => {
-  it("ends on an unresolved fork segment when standing on it (or anywhere on the unambiguous stretch before it)", () => {
+  it("ends on an unresolved branch segment when standing on it (or anywhere on the unambiguous stretch before it)", () => {
     for (const currentId of ["root", "a"]) {
       const view = computeCurrentPathView(frames, currentId);
       expect(describeSegments(view.segments)).toEqual([
         "root",
         "a",
         "b",
-        { fork: ["c1", "c2"], active: null },
+        { branch: ["c1", "c2"], active: null },
       ]);
     }
   });
 
-  it("shows a resolved fork segment (with the taken branch as active) right before a leaf on that branch", () => {
+  it("shows a resolved branch segment (with the taken branch as active) right before a leaf on that branch", () => {
     const view = computeCurrentPathView(frames, "c1");
     expect(describeSegments(view.segments)).toEqual([
       "root",
       "a",
       "b",
-      { fork: ["c1", "c2"], active: "c1" },
+      { branch: ["c1", "c2"], active: "c1" },
       "c1",
     ]);
   });
 
-  it("keeps the resolved fork segment visible even further down the branch (d after c2)", () => {
-    const view = computeCurrentPathView(frames, "d");
-    expect(describeSegments(view.segments)).toEqual([
-      "root",
-      "a",
-      "b",
-      { fork: ["c1", "c2"], active: "c2" },
-      "c2",
-      "d",
-    ]);
+  it("keeps the resolved branch segment visible further down the branch, and shows a second one for a branch created with a single option so far (d -> e)", () => {
+    for (const currentId of ["d", "e"]) {
+      const view = computeCurrentPathView(frames, currentId);
+      expect(describeSegments(view.segments)).toEqual([
+        "root",
+        "a",
+        "b",
+        { branch: ["c1", "c2"], active: "c2" },
+        "c2",
+        "d",
+        { branch: ["e"], active: "e" },
+        "e",
+      ]);
+    }
   });
 
   it("returns an empty view when there is no current frame or it is unknown", () => {

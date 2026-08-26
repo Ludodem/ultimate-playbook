@@ -15,10 +15,14 @@
   --radius-lg: 16px;
   --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
   --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.16);
-  --branch-0: #2f6fed;
-  --branch-1: #c2760f;
-  --branch-2: #1f8f5f;
-  --branch-3: #8b3fc9;
+  /* Volontairement sans bleu : --accent (bleu) signifie déjà "frame courante"
+     ailleurs dans la barre (voir .frame-chip.is-current, .chip-add) —
+     réutiliser le bleu pour la première branche la rendait indiscernable de
+     ce bleu-là, retour utilisateur direct. */
+  --branch-0: #c2760f;
+  --branch-1: #1f8f5f;
+  --branch-2: #8b3fc9;
+  --branch-3: #c23b6b;
   --branch-contrast: #ffffff;
   color-scheme: light dark;
   font:
@@ -39,10 +43,10 @@
     --accent: #6d9bff;
     --accent-contrast: #0b1220;
     --accent-soft: #1c2740;
-    --branch-0: #6d9bff;
-    --branch-1: #e8a94f;
-    --branch-2: #4fd19a;
-    --branch-3: #c084fc;
+    --branch-0: #e8a94f;
+    --branch-1: #4fd19a;
+    --branch-2: #c084fc;
+    --branch-3: #f28ab2;
     --branch-contrast: #0b1220;
   }
 }
@@ -425,6 +429,10 @@ button.primary {
   padding-bottom: 0.15rem;
 }
 
+/* Deux composants visuellement distincts pour deux niveaux d'info différents
+   (retour utilisateur direct) : `.frame-chip` = étape numérotée dans la
+   séquence (carré arrondi), `.branch-pill` = choix de branche (capsule
+   ovale, voir plus bas) — pour ne plus les confondre au premier coup d'œil. */
 .frame-chip {
   flex: none;
   min-width: 44px;
@@ -441,29 +449,79 @@ button.primary {
   font-weight: bold;
 }
 
-/* Groupe des options d'un même embranchement (voir `PathSegment` "fork" dans
+/* Frame appartenant à une branche (toutes celles qui suivent un embranchement
+   résolu, jusqu'au suivant) : liseré + fond légèrement teintés de la couleur
+   de cette branche, pour repérer d'un coup d'œil "ces frames vont ensemble" —
+   même quand la frame est aussi la frame courante (le remplissage bleu reste,
+   seul le contour prend la couleur de la branche). */
+.frame-chip.branch-color-0 {
+  border-width: 2px;
+  border-color: var(--branch-0);
+  background: color-mix(in srgb, var(--branch-0) 14%, var(--surface));
+}
+
+.frame-chip.branch-color-1 {
+  border-width: 2px;
+  border-color: var(--branch-1);
+  background: color-mix(in srgb, var(--branch-1) 14%, var(--surface));
+}
+
+.frame-chip.branch-color-2 {
+  border-width: 2px;
+  border-color: var(--branch-2);
+  background: color-mix(in srgb, var(--branch-2) 14%, var(--surface));
+}
+
+.frame-chip.branch-color-3 {
+  border-width: 2px;
+  border-color: var(--branch-3);
+  background: color-mix(in srgb, var(--branch-3) 14%, var(--surface));
+}
+
+.frame-chip.is-current.branch-color-0 {
+  border-color: var(--branch-0);
+}
+
+.frame-chip.is-current.branch-color-1 {
+  border-color: var(--branch-1);
+}
+
+.frame-chip.is-current.branch-color-2 {
+  border-color: var(--branch-2);
+}
+
+.frame-chip.is-current.branch-color-3 {
+  border-color: var(--branch-3);
+}
+
+/* Groupe des options d'un même embranchement (voir `BranchSegment` dans
    src/domain/tree.ts) : couleur distincte par option (index parmi les
-   sibling, boucle sur 4 teintes), pleine pour celle sur le chemin courant,
-   en contour pour les autres — pour qu'on voie d'un coup d'œil où sont les
+   sibling, boucle sur 4 teintes), pleine pour celle sur le chemin courant, en
+   contour pour les autres — pour qu'on voie d'un coup d'œil où sont les
    branches et laquelle est active, retour utilisateur ayant motivé ce
-   traitement (voir docs/ARCHITECTURE.md §8). */
+   traitement (voir docs/ARCHITECTURE.md §8). Apparaît dès la création d'une
+   branche même sans alternative pour l'instant (une seule pastille) — sinon
+   créer la première branche ne donne aucun signe visuel de ce qui vient de
+   se passer, deuxième retour utilisateur ayant motivé ce traitement. */
 .branch-tabs {
   display: flex;
   flex: none;
+  align-items: center;
   gap: 0.3rem;
 }
 
 .branch-pill {
   flex: none;
   min-height: 44px;
-  padding: 0 0.65rem;
+  padding: 0 0.85rem;
   display: flex;
   align-items: center;
-  border-radius: var(--radius-sm);
-  border: 1px dashed var(--border);
+  border-radius: 999px;
+  border: 1.5px dashed var(--border);
   background: transparent;
   color: var(--text-muted);
   font-size: 0.78rem;
+  font-style: italic;
   white-space: nowrap;
 }
 
@@ -490,7 +548,9 @@ button.primary {
 .branch-pill.is-active {
   border-style: solid;
   font-weight: 700;
+  font-style: normal;
   color: var(--branch-contrast);
+  box-shadow: var(--shadow-sm);
 }
 
 .branch-pill.branch-color-0.is-active {
@@ -520,8 +580,8 @@ button.primary {
   flex: none;
   min-height: 44px;
   padding: 0 0.65rem;
-  border-radius: var(--radius-sm);
-  border: 1px dashed var(--accent);
+  border-radius: 999px;
+  border: 1.5px dashed var(--accent);
   background: transparent;
   color: var(--accent);
   font-size: 0.78rem;
