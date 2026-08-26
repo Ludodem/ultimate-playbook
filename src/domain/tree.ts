@@ -32,32 +32,48 @@ export function getSubtreeIds(frames: Frame[], rootId: string): string[] {
   return ids;
 }
 
+/** Une frame de la barre Frames. */
+export interface FrameSegment {
+  kind: "frame";
+  frame: Frame;
+}
+
+/**
+ * Un embranchement rencontré sur le chemin, où qu'il soit (avant, à, ou après
+ * la frame courante) — voir docs/PRD.md §4.8 et le retour utilisateur qui a
+ * motivé ce type ("on ne comprend pas où sont les branches, sur laquelle on
+ * est"). `activeId` est l'option sur le chemin déjà emprunté (`null` si
+ * l'embranchement est la frame courante elle-même et qu'aucune option n'a
+ * encore été choisie).
+ */
+export interface ForkSegment {
+  kind: "fork";
+  options: Frame[];
+  activeId: string | null;
+}
+
+export type PathSegment = FrameSegment | ForkSegment;
+
 export interface CurrentPathView {
-  /** Chemin continu passant par la frame courante, sans ambiguïté : tous les
-   * ancêtres jusqu'à la racine (remonter via `parentId` ne bifurque jamais),
-   * puis les descendants tant qu'il n'y a qu'un seul enfant à chaque étape. */
-  chain: Frame[];
-  /** Options du premier embranchement rencontré juste après la fin de `chain`
-   * (tableau vide si `chain` se termine sur une feuille ou sur la frame
-   * courante elle-même sans enfant). */
-  forkOptions: Frame[];
+  segments: PathSegment[];
 }
 
 /**
  * Vue compacte "où en est-on dans l'arbre" pour la barre Frames (voir
  * docs/PRD.md §4.8) : pas tout l'arbre, seulement le chemin qui passe par la
- * frame courante, étendu au maximum sans ambiguïté dans les deux sens.
- * Naviguer vers une autre branche déjà explorée se fait en deux temps
- * (remonter jusqu'à l'embranchement, puis choisir l'autre option) plutôt
- * qu'en un raccourci direct — compromis délibéré pour garder cette barre
- * toujours visible sans jamais afficher tout l'arbre.
+ * frame courante, étendu au maximum sans ambiguïté dans les deux sens, avec
+ * un segment "fork" à chaque embranchement traversé (choisi ou non). Naviguer
+ * vers une branche déjà explorée mais absente de ce chemin se fait en deux
+ * temps (remonter jusqu'à son embranchement, puis la choisir) plutôt qu'en un
+ * raccourci direct — compromis délibéré pour garder cette barre toujours
+ * visible sans jamais afficher tout l'arbre.
  */
 export function computeCurrentPathView(
   frames: Frame[],
   currentFrameId: string | null,
 ): CurrentPathView {
   const current = currentFrameId ? getFrame(frames, currentFrameId) : undefined;
-  if (!current) return { chain: [], forkOptions: [] };
+  if (!current) return { segments: [] };
 
   const ancestors: Frame[] = [];
   let cursor = current;
@@ -77,11 +93,24 @@ export function computeCurrentPathView(
     tail = children[0];
   }
 
+  const chain = [...ancestors, current, ...descendants];
+  const segments: PathSegment[] = [];
+  for (let i = 0; i < chain.length; i++) {
+    if (i > 0) {
+      const siblings = getChildren(frames, chain[i - 1].id);
+      if (siblings.length > 1) {
+        segments.push({ kind: "fork", options: siblings, activeId: chain[i].id });
+      }
+    }
+    segments.push({ kind: "frame", frame: chain[i] });
+  }
+
   const tailChildren = getChildren(frames, tail.id);
-  return {
-    chain: [...ancestors, current, ...descendants],
-    forkOptions: tailChildren.length > 1 ? tailChildren : [],
-  };
+  if (tailChildren.length > 1) {
+    segments.push({ kind: "fork", options: tailChildren, activeId: null });
+  }
+
+  return { segments };
 }
 
 /**

@@ -3,12 +3,16 @@ import { useTranslation } from "react-i18next";
 import { computeCurrentPathView, getChildren } from "../../domain/tree";
 import { useActionEditorStore } from "../../state/actionEditorStore";
 
+/** Nombre de couleurs distinctes avant que la palette ne boucle — un embranchement
+ * a rarement plus de 2-3 options en pratique. */
+const BRANCH_COLOR_COUNT = 4;
+
 /**
  * Barre "Frames" toujours visible, en espace dédié (jamais posée par-dessus
  * le terrain) — voir docs/PRD.md §4.8. Se limite à la navigation (chemin
- * courant + options d'un embranchement) et aux deux actions les plus
- * fréquentes en construisant un play (frame suivante, nouvelle branche) :
- * le reste (renommage, réordonnancement, suppression, note) vit dans le menu
+ * courant + embranchements traversés) et aux deux actions les plus fréquentes
+ * en construisant un play (frame suivante, nouvelle branche) : le reste
+ * (renommage, réordonnancement, suppression, note) vit dans le menu
  * secondaire (`FrameActionsMenu.tsx`).
  */
 export function FrameTimeline() {
@@ -24,10 +28,21 @@ export function FrameTimeline() {
 
   if (!currentFrameId) return null;
 
-  const { chain, forkOptions } = computeCurrentPathView(frames, currentFrameId);
-  if (chain.length === 0) return null;
+  const { segments } = computeCurrentPathView(frames, currentFrameId);
+  if (segments.length === 0) return null;
 
   const canExtend = getChildren(frames, currentFrameId).length === 0;
+
+  // Nom de la branche la plus proche de la position courante (dernier
+  // embranchement résolu du chemin), affiché dans le libellé de la barre pour
+  // rester lisible même sans repérer visuellement les pastilles colorées.
+  const activeBranch = [...segments]
+    .reverse()
+    .find((s) => s.kind === "fork" && s.activeId !== null);
+  const activeBranchLabel =
+    activeBranch?.kind === "fork"
+      ? activeBranch.options.find((o) => o.id === activeBranch.activeId)?.branchLabel
+      : undefined;
 
   const handleConfirmBranch = () => {
     const label = branchLabelDraft.trim();
@@ -37,32 +52,52 @@ export function FrameTimeline() {
     setIsAddingBranch(false);
   };
 
+  // Numérotation d'affichage (1, 2, 3...) des seuls segments "frame", calculée
+  // à part pour ne pas muter de variable pendant le rendu du `.map` ci-dessous.
+  const frameNumbers = new Map<string, number>();
+  for (const segment of segments) {
+    if (segment.kind === "frame") frameNumbers.set(segment.frame.id, frameNumbers.size + 1);
+  }
+
   return (
     <div className="frame-timeline">
-      <span className="frame-timeline-label">{t("editor.frames.title")}</span>
+      <span className="frame-timeline-label">
+        {t("editor.frames.title")}
+        {activeBranchLabel && ` · ${activeBranchLabel}`}
+      </span>
       <div className="frame-row">
-        {chain.map((frame) => (
-          <button
-            key={frame.id}
-            type="button"
-            className={`frame-chip${frame.id === currentFrameId ? " is-current" : ""}`}
-            onClick={() => selectFrame(frame.id)}
-            aria-label={t("editor.frames.jumpTo", { n: chain.indexOf(frame) + 1 })}
-          >
-            {chain.indexOf(frame) + 1}
-          </button>
-        ))}
-
-        {forkOptions.map((option) => (
-          <button
-            key={option.id}
-            type="button"
-            className="branch-pill"
-            onClick={() => selectFrame(option.id)}
-          >
-            {option.branchLabel}
-          </button>
-        ))}
+        {segments.map((segment, index) => {
+          if (segment.kind === "frame") {
+            const frameNumber = frameNumbers.get(segment.frame.id);
+            return (
+              <button
+                key={segment.frame.id}
+                type="button"
+                className={`frame-chip${segment.frame.id === currentFrameId ? " is-current" : ""}`}
+                onClick={() => selectFrame(segment.frame.id)}
+                aria-label={t("editor.frames.jumpTo", { n: frameNumber })}
+              >
+                {frameNumber}
+              </button>
+            );
+          }
+          return (
+            <div className="branch-tabs" key={`fork-${index}`}>
+              {segment.options.map((option, optionIndex) => (
+                <button
+                  key={option.id}
+                  type="button"
+                  className={`branch-pill branch-color-${optionIndex % BRANCH_COLOR_COUNT}${
+                    option.id === segment.activeId ? " is-active" : ""
+                  }`}
+                  onClick={() => selectFrame(option.id)}
+                >
+                  {option.branchLabel}
+                </button>
+              ))}
+            </div>
+          );
+        })}
 
         <div className="frame-row-actions">
           <button type="button" className="chip-branch" onClick={() => setIsAddingBranch(true)}>
