@@ -40,7 +40,12 @@ export function FrameActionsMenu() {
         >
           {t("editor.frames.moveDown")}
         </button>
-        <button type="button" onClick={() => deleteFrame(currentFrame.id)} disabled={isRoot}>
+        <button
+          type="button"
+          className="danger"
+          onClick={() => deleteFrame(currentFrame.id)}
+          disabled={isRoot}
+        >
           {t("editor.frames.delete")}
         </button>
       </div>

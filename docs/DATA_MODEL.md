@@ -108,7 +108,13 @@ interface Action {
   id: string;
   schemaVersion: 1;
   name: string;
-  tags: string[]; // libre, ex: ["stack vertical", "iso"] — utilisé par la future bibliothèque
+  // Classement hiérarchique de la bibliothèque (docs/PRD.md §4.10) : texte
+  // libre à chaque niveau (avec suggestions des valeurs déjà utilisées dans
+  // l'UI, pas un enum fermé), tous optionnels — absent = panier "Non classé"
+  // à ce niveau. Remplace l'ancien `tags: string[]` (jamais exposé en UI).
+  category?: string; // ex. "Attaque" — niveau 1
+  system?: string; // ex. "Vertical" — niveau 2
+  variant?: string; // ex. "Longue ligne" — niveau 3
   fieldConfig: FieldConfig;
   defaultTransitionMs: number; // durée par défaut d'une transition en mode fluide (ex: 1200)
   frames: Frame[]; // arbre à plat (voir §9) ; toujours >= 1 ; exactement une frame avec parentId === null

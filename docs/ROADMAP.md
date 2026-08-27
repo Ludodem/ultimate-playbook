@@ -111,10 +111,24 @@ Découpage issu des retours utilisateur post-Phase 7 (terrain trop petit sur mob
 
 ---
 
+## Phase 9 — Identité visuelle (`docs/PRD.md` §4.9)
+
+- [x] Système de bouton cohérent (fond plein + ombre légère, retour tactile au clic, focus visible, variante `.danger` pour les actions destructives) appliqué globalement — remplace le style contour plat jugé "moche" en retour utilisateur direct. Les composants à traitement dédié (`.frame-chip`, `.branch-pill`, `.chip-add`, `.mode-switch button`...) restent inchangés, la base ne s'applique qu'aux propriétés qu'ils ne redéfinissent pas déjà.
+- [x] Petit set d'icônes SVG dédiées (`components/icons/SetupIcons.tsx` : terrain demi/complet/longue-ligne, effectif vertical/horizontal/vide), vocabulaire visuel réutilisé du terrain réel (bande d'en-but, cercles de joueur) plutôt qu'un set générique — réutilisable ensuite pour les catégories de la bibliothèque en Phase 10.
+- [x] `NewActionSetup.tsx` refondu en tuiles cliquables (`SetupTile.tsx`, réutilisé pour les 3 tuiles terrain + les 3 tuiles effectif) plutôt qu'un formulaire de `<fieldset>`/radios. Terrain indéfini retiré de cet écran ; la case "marge sideline" devient une 3e tuile terrain à part entière ("Demi-terrain + longue ligne") plutôt qu'une option orthogonale. Vérifié à la souris et sur profil mobile réaliste (`devices["iPhone 13"]`).
+
+## Phase 10 — Bibliothèque de plays (`docs/PRD.md` §4.10)
+
+- [ ] `Action.tags: string[]` remplacé par `category?`/`system?`/`variant?` (`docs/DATA_MODEL.md` §4) — voir `docs/ARCHITECTURE.md` §8 pour la décision (pas de migration nécessaire, champ jamais exposé en UI jusqu'ici).
+- [ ] Fonction domaine pure pour construire l'arbre de navigation de la bibliothèque à partir de `listActionsFromLibrary()` (groupement par `category` → `system` → `variant`, panier "Non classé" à chaque niveau pour les champs absents), avec tests unitaires.
+- [ ] Écran Bibliothèque : liste/grille des actions, drill-down par niveau, ouvrir/dupliquer/supprimer une action, "+ Nouvelle action" toujours visible.
+- [ ] Navigation d'accueil de l'app repensée : la Bibliothèque devient l'écran d'accueil (voir `docs/ARCHITECTURE.md` §8) au lieu de la reprise automatique de la dernière action éditée.
+- [ ] Champs `category`/`system`/`variant` éditables depuis l'éditeur (menu secondaire) en plus de la bibliothèque, avec suggestions des valeurs déjà utilisées.
+
+---
+
 ## Post-MVP (hors périmètre immédiat — à re-découper en phases le moment venu)
 
-- Bibliothèque hiérarchisée d'actions (dossiers + tags, recherche/filtre).
-- Duplication d'une action existante comme point de départ d'une variante.
 - Mode présentation plein écran (déroulé de plusieurs actions à la suite).
 - Export PNG/PDF d'une frame ou de l'action complète ; export GIF/vidéo de l'animation.
 - Partage en lecture seule via lien (nécessite un backend, ex. Supabase).

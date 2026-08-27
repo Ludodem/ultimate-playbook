@@ -102,9 +102,27 @@ Réglage manuel (pas basé sur l'orientation physique de l'appareil), disponible
 
 Sur PC/tablette large, une fois le terrain ajusté à l'espace disponible (§4.8), il reste souvent un espace inutilisé sur les côtés (le terrain est contraint par la hauteur, pas par la largeur). Cet espace est alors réservé à une **colonne latérale "Frames"**, qui remplace la barre du bas plutôt que de s'y ajouter : elle montre **l'arbre complet** de l'action (toutes les branches, pas seulement le chemin courant), avec indentation et couleur par branche, cliquable directement pour naviguer vers n'importe quelle frame en un seul geste — un avantage sur la barre du bas, qui ne montre que le chemin courant. Bascule entre les deux vues basée sur une **mesure réelle de l'espace disponible** (pas un point de rupture d'écran fixe) : si le terrain laisse au moins ~280px de côté une fois ajusté à l'orientation courante, le panneau latéral s'affiche ; sinon, la barre du bas (§4.8) reste utilisée. Les actions rapides (frame suivante, nouvelle branche) restent disponibles dans les deux vues.
 
+### 4.9 Identité visuelle (tuiles + icônes)
+
+Passe de polish sur les deux écrans les plus "bruts" visuellement à ce stade :
+
+- **Boutons et menus** (⋯, pastille Éditer/Jouer, panneaux) redessinés avec un vrai traitement de bouton (états hover/actif, cohérent avec les jetons de design existants `--accent`/`--radius`/`--shadow-*`) plutôt que le style HTML par défaut visible aujourd'hui sur certains boutons du menu secondaire.
+- **Écran de création d'action** repensé en tuiles cliquables avec icône, plutôt qu'un formulaire de `<fieldset>`/boutons radio :
+  - Terrain : 3 tuiles — **Demi-terrain**, **Terrain complet**, **Demi-terrain + longue ligne** (la case à cocher "marge sideline" actuelle devient une tuile à part entière plutôt qu'une option orthogonale). "Terrain indéfini" retiré de cet écran (reste accessible via import JSON d'une action existante).
+  - Effectif : 3 tuiles — **Stack vertical**, **Stack horizontal**, **Vide**.
+  - Icônes en **SVG dédiés** (petit set cohérent avec le reste de l'identité visuelle), pas des emoji.
+
+### 4.10 Bibliothèque de plays
+
+Le stockage local supporte déjà plusieurs actions (`state/libraryStore.ts`), mais aucune UI ne permet aujourd'hui de les parcourir : une seule action "active" à la fois, reprise automatiquement au chargement. Cette section ouvre cette capacité.
+
+- **Écran Bibliothèque**, nouvel écran d'accueil de l'application (remplace la reprise automatique de la dernière action éditée — voir `docs/ARCHITECTURE.md` §8) : liste/grille des actions sauvegardées, avec un accès direct pour en ouvrir une dans l'éditeur, la dupliquer ou la supprimer, et un bouton "+ Nouvelle action" toujours visible.
+- **Classement hiérarchique à 3 niveaux** (`category` / `system` / `variant` sur `Action`, voir `docs/DATA_MODEL.md` §4) : champs texte libre (avec suggestions des valeurs déjà utilisées dans la bibliothèque, pas une liste fermée), tous optionnels — une action sans classement tombe dans un panier "Non classé" à chaque niveau concerné. La bibliothèque se navigue en drill-down (ex. "Attaque" → "Vertical" → "Longue ligne"), chaque niveau affichant les actions qui s'y trouvent directement plus les sous-catégories suivantes.
+- Pas de système de flags/favoris au MVP de cette fonctionnalité — le classement hiérarchique couvre le besoin de retrouver un play rapidement ; à réévaluer plus tard si ça s'avère insuffisant à l'usage.
+- Renommer/modifier le classement d'une action existante reste possible depuis l'éditeur (menu secondaire) autant que depuis la bibliothèque.
+
 ## 5. Hors scope du MVP (post-MVP, voir `docs/ROADMAP.md`)
 
-- Bibliothèque hiérarchisée de plays (dossiers + tags).
 - Backend avec comptes utilisateurs, partage par lien, collaboration.
 - Export image/PDF/GIF/vidéo d'une action.
 - Mode présentation plein écran (déroulé de plusieurs actions).

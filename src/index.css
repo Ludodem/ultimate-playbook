@@ -109,16 +109,51 @@ body {
   flex-direction: column;
 }
 
-.setup-panel fieldset {
-  margin: 0.75rem 0;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 0.75rem;
+/* Tuiles de l'écran de création (Phase 9, docs/PRD.md §4.9) : remplacent les
+   boutons radio d'origine, mêmes composants pour le choix du terrain et celui
+   de l'effectif (`SetupTile.tsx`). */
+.setup-tiles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.6rem;
+  margin: 0.5rem 0 1.1rem;
 }
 
-.setup-panel legend {
-  padding: 0 0.35rem;
+.setup-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 96px;
+  padding: 0.75rem 0.4rem;
+  background: var(--surface);
+  color: var(--text-muted);
+}
+
+.setup-tile-icon {
+  display: block;
+  width: 36px;
+  height: 44px;
+}
+
+.setup-tile-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.setup-tile-label {
+  font-size: 0.72rem;
   font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.setup-tile.is-selected {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: var(--shadow-sm);
 }
 
 .text-field {
@@ -506,34 +541,75 @@ body {
   color: var(--accent);
 }
 
+/* Système de bouton (Phase 9, docs/PRD.md §4.9) : fond plein + ombre légère
+   plutôt qu'un simple contour (rendu "formulaire HTML" jugé "moche" par
+   retour utilisateur direct), léger enfoncement au clic pour un vrai retour
+   tactile. Les composants à traitement dédié (`.frame-chip`, `.branch-pill`,
+   `.chip-add`, `.mode-switch button`...) restent inchangés : ils redéfinissent
+   déjà `background`/`border`/`box-shadow`, cette base ne s'applique qu'aux
+   propriétés qu'ils ne redéfinissent pas. */
 button {
   min-height: 44px; /* cible tactile suffisante, voir docs/PRD.md §4.7 */
-  padding: 0.5rem 0.9rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  padding: 0.5rem 1rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
   background: var(--surface-raised);
   color: var(--text);
   font: inherit;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
+  box-shadow: var(--shadow-sm);
   transition:
-    border-color 0.15s ease,
-    background-color 0.15s ease;
+    transform 0.1s ease,
+    box-shadow 0.15s ease,
+    background-color 0.15s ease,
+    border-color 0.15s ease;
 }
 
 button:hover:not(:disabled) {
-  border-color: var(--accent);
+  background: var(--accent-soft);
+  border-color: color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+button:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: none;
+}
+
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 button:disabled {
   opacity: 0.45;
   cursor: default;
+  box-shadow: none;
 }
 
 button.primary {
   background: var(--accent);
   border-color: var(--accent);
   color: var(--accent-contrast);
+}
+
+button.primary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent) 85%, black);
+  border-color: color-mix(in srgb, var(--accent) 85%, black);
+}
+
+/* Actions destructives (supprimer une frame, retirer un joueur nommé) : ton
+   distinct plutôt que le même traitement que les actions neutres. */
+button.danger {
+  background: transparent;
+  border-color: color-mix(in srgb, var(--danger) 45%, transparent);
+  color: var(--danger);
+  box-shadow: none;
+}
+
+button.danger:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+  border-color: var(--danger);
 }
 
 .setup-panel > button.primary {

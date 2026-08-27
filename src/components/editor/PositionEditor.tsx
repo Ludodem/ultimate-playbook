@@ -279,6 +279,7 @@ export function PositionEditor() {
                 {selectedEntity && (
                   <button
                     type="button"
+                    className="danger"
                     onClick={() => {
                       removeEntity(selectedEntity.id);
                     }}
