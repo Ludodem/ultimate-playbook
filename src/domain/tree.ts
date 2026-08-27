@@ -2,6 +2,13 @@ import type { Frame } from "./models";
 
 /** Voir docs/DATA_MODEL.md §9 et docs/ARCHITECTURE.md §7. */
 
+/** Nombre de couleurs distinctes avant que la palette ne boucle (`--branch-0..3`
+ * dans `src/index.css`) — un embranchement a rarement plus de 2-3 options en
+ * pratique. Partagé par la barre Frames (`FrameTimeline.tsx`) et le panneau
+ * arbre complet (`FrameTreePanel.tsx`) pour qu'une même branche ait toujours
+ * la même couleur, quelle que soit la vue. */
+export const BRANCH_COLOR_COUNT = 4;
+
 /** L'unique frame avec parentId === null. */
 export function getRootFrame(frames: Frame[]): Frame | undefined {
   return frames.find((f) => f.parentId === null);
@@ -114,6 +121,64 @@ export function computeCurrentPathView(
   }
 
   return { segments };
+}
+
+/** Une ligne de la vue "arbre complet" (`FrameTreePanel.tsx`), à plat pour un
+ * rendu en liste indentée façon explorateur de fichiers. */
+export interface TreeRow {
+  frame: Frame;
+  /** Niveau d'indentation visuelle : n'augmente qu'à un embranchement (une
+   * longue chaîne sans branche reste au même niveau, quelle que soit sa
+   * longueur) — contrairement à `generation`, qui compte chaque frame. */
+  visualDepth: number;
+  /** Position depuis la racine en nombre de frames (racine = 1), le long du
+   * chemin propre à cette frame — correspond à la numérotation affichée dans
+   * la barre Frames (`computeCurrentPathView`) pour la frame courante. */
+  generation: number;
+  /** Couleur héritée du dernier embranchement remonté (`null` avant le
+   * premier), même convention que `computeCurrentPathView` (index de
+   * l'option parmi les enfants du fork, modulo `BRANCH_COLOR_COUNT`). */
+  branchColorIndex: number | null;
+}
+
+/**
+ * Vue "arbre complet" pour le panneau latéral sur grand écran (voir
+ * docs/PRD.md §4.8bis) : toutes les frames de l'arbre, à plat en ordre
+ * préfixe (parcours en profondeur), avec assez d'information pour un rendu
+ * indenté et coloré par branche. Contrairement à `computeCurrentPathView`
+ * (compacte, un seul chemin), montre tout — pertinent uniquement quand la
+ * place ne manque pas.
+ */
+export function computeFullTreeRows(frames: Frame[]): TreeRow[] {
+  const root = getRootFrame(frames);
+  if (!root) return [];
+
+  const rows: TreeRow[] = [];
+  const visit = (
+    frame: Frame,
+    visualDepth: number,
+    generation: number,
+    branchColorIndex: number | null,
+  ) => {
+    rows.push({ frame, visualDepth, generation, branchColorIndex });
+    const children = getChildren(frames, frame.id);
+    children.forEach((child, index) => {
+      // Un enfant avec un `branchLabel` est une branche dès sa création, même
+      // seule pour l'instant (pas seulement à partir de 2 options) — même
+      // convention que `computeCurrentPathView` (voir sa note sur le retour
+      // utilisateur "aucun feedback à la création de la première branche").
+      const isBranch = child.branchLabel !== undefined;
+      visit(
+        child,
+        isBranch ? visualDepth + 1 : visualDepth,
+        generation + 1,
+        isBranch ? index % BRANCH_COLOR_COUNT : branchColorIndex,
+      );
+    });
+  };
+  visit(root, 0, 1, null);
+
+  return rows;
 }
 
 /**

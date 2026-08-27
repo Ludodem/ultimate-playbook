@@ -98,6 +98,10 @@ Issu des retours utilisateur post-Phase 7/8 (deux itérations d'implémentation 
 
 Réglage manuel (pas basé sur l'orientation physique de l'appareil), disponible y compris sur PC, dans le menu secondaire (§4.8) : **Portrait** (par défaut — l'attaque progresse de bas en haut) ou **Paysage** (l'attaque progresse de gauche à droite, terrain tourné à 90°). Préférence d'affichage pure, **non persistée** : repart toujours en portrait au rechargement de la page — un choix délibéré pour garder ce réglage simple au MVP plutôt que d'ajouter un mécanisme de sauvegarde dédié.
 
+### 4.8ter Panneau Frames latéral (grand écran)
+
+Sur PC/tablette large, une fois le terrain ajusté à l'espace disponible (§4.8), il reste souvent un espace inutilisé sur les côtés (le terrain est contraint par la hauteur, pas par la largeur). Cet espace est alors réservé à une **colonne latérale "Frames"**, qui remplace la barre du bas plutôt que de s'y ajouter : elle montre **l'arbre complet** de l'action (toutes les branches, pas seulement le chemin courant), avec indentation et couleur par branche, cliquable directement pour naviguer vers n'importe quelle frame en un seul geste — un avantage sur la barre du bas, qui ne montre que le chemin courant. Bascule entre les deux vues basée sur une **mesure réelle de l'espace disponible** (pas un point de rupture d'écran fixe) : si le terrain laisse au moins ~280px de côté une fois ajusté à l'orientation courante, le panneau latéral s'affiche ; sinon, la barre du bas (§4.8) reste utilisée. Les actions rapides (frame suivante, nouvelle branche) restent disponibles dans les deux vues.
+
 ## 5. Hors scope du MVP (post-MVP, voir `docs/ROADMAP.md`)
 
 - Bibliothèque hiérarchisée de plays (dossiers + tags).

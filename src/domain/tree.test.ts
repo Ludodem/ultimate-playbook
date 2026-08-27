@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { Frame } from "./models";
 import {
   computeCurrentPathView,
+  computeFullTreeRows,
   getChildren,
   getRootFrame,
   getSubtreeIds,
@@ -145,5 +146,52 @@ describe("computeCurrentPathView", () => {
   it("returns an empty view when there is no current frame or it is unknown", () => {
     expect(computeCurrentPathView(frames, null)).toEqual({ segments: [] });
     expect(computeCurrentPathView(frames, "missing")).toEqual({ segments: [] });
+  });
+});
+
+describe("computeFullTreeRows", () => {
+  it("flattens the whole tree in pre-order, indenting only at a labeled branch", () => {
+    const rows = computeFullTreeRows(frames);
+    expect(rows.map((r) => r.frame.id)).toEqual(["root", "a", "b", "c1", "c2", "d", "e"]);
+    const depthById = Object.fromEntries(rows.map((r) => [r.frame.id, r.visualDepth]));
+    // root -> a -> b share the same visual depth (no branch yet).
+    expect(depthById).toMatchObject({ root: 0, a: 0, b: 0 });
+    // b forks into c1/c2: both step in one level. c2 -> d is a plain
+    // continuation (stays at the same level), but d -> e steps in again since
+    // `e` itself carries a branchLabel (see the "immediate feedback" test).
+    expect(depthById).toMatchObject({ c1: 1, c2: 1, d: 1, e: 2 });
+  });
+
+  it("numbers generation continuously from the root regardless of branching", () => {
+    const rows = computeFullTreeRows(frames);
+    const generationById = Object.fromEntries(rows.map((r) => [r.frame.id, r.generation]));
+    expect(generationById).toEqual({ root: 1, a: 2, b: 3, c1: 4, c2: 4, d: 5, e: 6 });
+  });
+
+  it("colors each fork's options distinctly and propagates the color down an unforked chain", () => {
+    const rows = computeFullTreeRows(frames);
+    const colorById = Object.fromEntries(rows.map((r) => [r.frame.id, r.branchColorIndex]));
+    expect(colorById.root).toBeNull();
+    expect(colorById.a).toBeNull();
+    expect(colorById.b).toBeNull();
+    expect(colorById.c1).toBe(0);
+    expect(colorById.c2).toBe(1);
+    expect(colorById.d).toBe(1); // inherits c2's color, no branch in between
+    expect(colorById.e).toBe(0); // its own color: `e` itself carries a branchLabel
+  });
+
+  it("returns an empty list when there is no root", () => {
+    expect(computeFullTreeRows([])).toEqual([]);
+  });
+
+  it("gives immediate depth/color feedback for a branch with only one option so far", () => {
+    // Mirrors the `d -> e` case in computeCurrentPathView: `e` has a
+    // branchLabel despite being an only child (no second option yet) — this
+    // must still step in a level and get a color, not wait for a sibling.
+    const rows = computeFullTreeRows(frames);
+    const eRow = rows.find((r) => r.frame.id === "e")!;
+    const dRow = rows.find((r) => r.frame.id === "d")!;
+    expect(eRow.visualDepth).toBe(dRow.visualDepth + 1);
+    expect(eRow.branchColorIndex).toBe(0);
   });
 });

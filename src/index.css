@@ -148,6 +148,26 @@ body {
    taille naturelle) décomptée. `Field` (voir field/Field.tsx) se dimensionne
    lui-même pour tenir dans cet espace en largeur ET en hauteur, comme
    `object-fit: contain`. */
+/* Conteneur du terrain + de la vue Frames, séparé de `.editor` pour pouvoir
+   alterner sa direction de flex (colonne = barre du bas, ligne = panneau
+   latéral) sans toucher aux pastilles absolument positionnées (`.mode-switch`,
+   `.menu-fab`), restées enfants directs de `.editor` — voir docs/PRD.md
+   §4.8bis et `PositionEditor.tsx` pour la logique de bascule. */
+.editor-main {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.editor-main-row {
+  flex-direction: row;
+}
+
+.editor-main-row .field-stage {
+  min-width: 0;
+}
+
 .field-stage {
   position: relative;
   flex: 1 1 auto;
@@ -342,6 +362,112 @@ body {
 .playback-dock {
   max-height: 40vh;
   overflow-y: auto;
+}
+
+/* Panneau latéral "arbre complet" (`FrameTreePanel.tsx`, grand écran, voir
+   docs/PRD.md §4.8bis) : même traitement de surface dédiée que
+   `.frame-timeline`/`.playback-dock` (jamais un recouvrement du terrain),
+   mais en colonne verticale à droite plutôt qu'en bande horizontale en bas. */
+.frame-tree-panel {
+  flex: none;
+  width: 280px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--surface-raised);
+  border-left: 1px solid var(--border);
+  box-shadow: -4px 0 16px rgba(15, 23, 42, 0.08);
+  padding: 0.6rem;
+}
+
+.frame-tree-rows {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0.2rem 0 0.5rem;
+}
+
+.frame-tree-row {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 40px;
+  padding-left: calc(0.5rem + var(--frame-tree-depth, 0) * 1.1rem);
+  padding-right: 0.5rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.frame-tree-row:hover {
+  background: var(--surface);
+}
+
+.frame-tree-row.is-current {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.frame-tree-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--border);
+}
+
+.frame-tree-row.is-current .frame-tree-dot {
+  background: var(--accent);
+}
+
+.frame-tree-row.branch-color-0 .frame-tree-dot {
+  background: var(--branch-0);
+}
+
+.frame-tree-row.branch-color-1 .frame-tree-dot {
+  background: var(--branch-1);
+}
+
+.frame-tree-row.branch-color-2 .frame-tree-dot {
+  background: var(--branch-2);
+}
+
+.frame-tree-row.branch-color-3 .frame-tree-dot {
+  background: var(--branch-3);
+}
+
+.frame-tree-generation {
+  flex: none;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.frame-tree-row.is-current .frame-tree-generation {
+  color: inherit;
+}
+
+.frame-tree-branch-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-style: italic;
+  font-weight: 400;
+}
+
+.frame-tree-actions {
+  flex: none;
+  display: flex;
+  gap: 0.4rem;
 }
 
 .radio-option,

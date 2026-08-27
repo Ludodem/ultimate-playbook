@@ -1,11 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { computeCurrentPathView, getChildren } from "../../domain/tree";
+import { BRANCH_COLOR_COUNT, computeCurrentPathView, getChildren } from "../../domain/tree";
 import { useActionEditorStore } from "../../state/actionEditorStore";
-
-/** Nombre de couleurs distinctes avant que la palette ne boucle — un embranchement
- * a rarement plus de 2-3 options en pratique. */
-const BRANCH_COLOR_COUNT = 4;
 
 /**
  * Barre "Frames" toujours visible, en espace dédié (jamais posée par-dessus

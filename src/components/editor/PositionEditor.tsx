@@ -1,15 +1,26 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Field } from "../field";
 import { PlaybackView } from "../playback";
 import { actionFileName, buildAction } from "../../domain/action";
 import type { Position } from "../../domain/disc";
+import { fitFieldStageSize } from "../../domain/geometry";
 import { controlPointForMidpoint, curveMidpoint } from "../../domain/interpolation";
 import { MAX_RECOMMENDED_PER_TEAM, useActionEditorStore } from "../../state/actionEditorStore";
 import { FrameActionsMenu } from "./FrameActionsMenu";
 import { FrameTimeline } from "./FrameTimeline";
+import { FrameTreePanel } from "./FrameTreePanel";
 
 type ViewMode = "edit" | "play";
+
+/** Largeur minimale à réserver côté terrain une fois le panneau latéral
+ * soustrait, en dessous de laquelle on repasse en barre du bas — voir
+ * docs/PRD.md §4.8bis. Mesuré plutôt qu'un point de rupture CSS fixe : ce qui
+ * compte n'est pas la largeur de l'écran mais l'espace effectivement laissé
+ * inutilisé à côté du terrain une fois celui-ci ajusté à l'espace disponible
+ * (`fitFieldStageSize`), qui dépend de l'orientation courante et du ratio du
+ * terrain, pas seulement du viewport. */
+const SIDE_PANEL_MIN_SLACK = 280;
 
 /**
  * Éditeur de positions d'une action en cours (Phases 3-8, docs/ROADMAP.md).
@@ -48,6 +59,29 @@ export function PositionEditor() {
   const future = useActionEditorStore((s) => s.future);
   const orientation = useActionEditorStore((s) => s.orientation);
   const setOrientation = useActionEditorStore((s) => s.setOrientation);
+
+  const editorMainRef = useRef<HTMLDivElement>(null);
+  const [useSidePanel, setUseSidePanel] = useState(false);
+
+  // Bascule barre du bas / panneau latéral (docs/PRD.md §4.8bis) : mesure
+  // l'espace que le terrain laisserait inutilisé sur le côté une fois ajusté
+  // à `.editor-main` (voir `fitFieldStageSize`, qui tient compte de
+  // l'orientation courante) plutôt qu'un point de rupture CSS fixe — sur PC
+  // large, ce "slack" existe déjà aujourd'hui (le terrain est contraint par
+  // la hauteur, pas la largeur) ; sur mobile, il n'existe pas.
+  useEffect(() => {
+    const el = editorMainRef.current;
+    if (!el || !fieldConfig) return undefined;
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (!entry) return;
+      const { width, height } = entry.contentRect;
+      const fitted = fitFieldStageSize(width, height, fieldConfig, orientation);
+      setUseSidePanel(width - fitted.width >= SIDE_PANEL_MIN_SLACK);
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [fieldConfig, orientation]);
 
   if (!fieldConfig || !frame || !actionId || !createdAt || !updatedAt) return null;
 
@@ -108,7 +142,7 @@ export function PositionEditor() {
       {viewMode === "play" ? (
         <PlaybackView />
       ) : (
-        <>
+        <div className={`editor-main${useSidePanel ? " editor-main-row" : ""}`} ref={editorMainRef}>
           <div className="field-stage">
             <div className="field-demo">
               <Field
@@ -170,8 +204,8 @@ export function PositionEditor() {
             )}
           </div>
 
-          <FrameTimeline />
-        </>
+          {useSidePanel ? <FrameTreePanel /> : <FrameTimeline />}
+        </div>
       )}
 
       <div className="mode-switch">
