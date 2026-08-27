@@ -7,8 +7,8 @@ import { DISC_FILL_COLOR, DISC_STROKE_COLOR } from "./theme";
 interface DiscMarkerProps {
   disc: Disc;
   entities: Entity[];
-  toX: (percent: number) => number;
-  toY: (percent: number) => number;
+  toX: (widthPercent: number, lengthPercent: number) => number;
+  toY: (widthPercent: number, lengthPercent: number) => number;
   radius: number;
   /** Rayon (px) de l'entité porteuse, pour décaler visuellement le disque quand
    * il est en main — sinon il recouvre entièrement le label du joueur. */
@@ -39,8 +39,8 @@ export function DiscMarker({
 
   return (
     <Circle
-      x={toX(disc.x) + offset}
-      y={toY(disc.y) - offset}
+      x={toX(disc.x, disc.y) + offset}
+      y={toY(disc.x, disc.y) - offset}
       radius={radius}
       fill={DISC_FILL_COLOR}
       stroke={DISC_STROKE_COLOR}

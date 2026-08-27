@@ -12,10 +12,10 @@ interface DiscCurveEditorProps {
   toPosition: Position;
   /** Sommet réel de la courbe (t=0.5) — voir domain/interpolation.ts `curveMidpoint`. */
   midpoint: Position;
-  toX: (percent: number) => number;
-  toY: (percent: number) => number;
-  fromX: (px: number) => number;
-  fromY: (py: number) => number;
+  toX: (widthPercent: number, lengthPercent: number) => number;
+  toY: (widthPercent: number, lengthPercent: number) => number;
+  fromX: (screenX: number, screenY: number) => number;
+  fromY: (screenX: number, screenY: number) => number;
   /** Plage draggable sur l'axe largeur (inclut la marge sideline si activée). */
   minX: number;
   maxX: number;
@@ -51,8 +51,8 @@ export function DiscCurveEditor({
 }: DiscCurveEditorProps) {
   const controlPoint = controlPointForMidpoint(fromPosition, toPosition, midpoint);
   const points = sampleQuadraticBezier(fromPosition, controlPoint, toPosition, 24).flatMap((p) => [
-    toX(p.x),
-    toY(p.y),
+    toX(p.x, p.y),
+    toY(p.x, p.y),
   ]);
 
   const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
@@ -63,15 +63,21 @@ export function DiscCurveEditor({
   });
 
   const toFieldPoint = (e: Konva.KonvaEventObject<DragEvent>): Position =>
-    clampToVisibleField({ x: fromX(e.target.x()), y: fromY(e.target.y()) });
+    clampToVisibleField({
+      x: fromX(e.target.x(), e.target.y()),
+      y: fromY(e.target.x(), e.target.y()),
+    });
 
   // Contraint la position du nœud Konva lui-même pendant le drag (et pas
   // seulement la valeur qu'on stocke ensuite) : sans ça, le handle suivrait le
   // pointeur au-delà des bords et disparaîtrait visuellement avant que React
   // n'ait l'occasion de le ramener dans les clous au prochain rendu.
   const dragBoundFunc = function (this: Konva.Node, pos: { x: number; y: number }) {
-    const clamped = clampToVisibleField({ x: fromX(pos.x), y: fromY(pos.y) });
-    return { x: toX(clamped.x), y: toY(clamped.y) };
+    const clamped = clampToVisibleField({
+      x: fromX(pos.x, pos.y),
+      y: fromY(pos.x, pos.y),
+    });
+    return { x: toX(clamped.x, clamped.y), y: toY(clamped.x, clamped.y) };
   };
 
   return (
@@ -84,8 +90,8 @@ export function DiscCurveEditor({
         listening={false}
       />
       <Circle
-        x={toX(midpoint.x)}
-        y={toY(midpoint.y)}
+        x={toX(midpoint.x, midpoint.y)}
+        y={toY(midpoint.x, midpoint.y)}
         radius={radius * 0.85}
         fill={DISC_ARROW_COLOR}
         stroke="#ffffff"

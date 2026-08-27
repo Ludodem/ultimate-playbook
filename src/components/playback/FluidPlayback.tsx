@@ -18,6 +18,7 @@ export function FluidPlayback() {
   const { t } = useTranslation();
   const fieldConfig = useActionEditorStore((s) => s.fieldConfig);
   const frames = useActionEditorStore((s) => s.frames);
+  const orientation = useActionEditorStore((s) => s.orientation);
 
   const [choices, setChoices] = useState<Record<string, string>>({});
   const [segmentIndex, setSegmentIndex] = useState(0);
@@ -99,7 +100,7 @@ export function FluidPlayback() {
     <>
       <div className="field-stage">
         <div className="field-demo">
-          <Field fieldConfig={fieldConfig} frame={displayFrame} />
+          <Field fieldConfig={fieldConfig} frame={displayFrame} orientation={orientation} />
         </div>
 
         {displayFrame.note && (

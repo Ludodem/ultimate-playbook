@@ -17,6 +17,7 @@ export function StepPlayback() {
   const { t } = useTranslation();
   const fieldConfig = useActionEditorStore((s) => s.fieldConfig);
   const frames = useActionEditorStore((s) => s.frames);
+  const orientation = useActionEditorStore((s) => s.orientation);
   const root = getRootFrame(frames);
   const [currentFrameId, setCurrentFrameId] = useState(root?.id ?? null);
   const [animatingToId, setAnimatingToId] = useState<string | null>(null);
@@ -70,6 +71,7 @@ export function StepPlayback() {
           <Field
             fieldConfig={fieldConfig}
             frame={displayFrame}
+            orientation={orientation}
             nextFrame={!isAnimating && children.length === 1 ? children[0] : undefined}
           />
         </div>

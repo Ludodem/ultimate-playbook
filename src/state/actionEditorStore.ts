@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { buildAction } from "../domain/action";
+import type { FieldOrientation } from "../domain/geometry";
 import type {
   Action,
   CurveControlPoint,
@@ -43,6 +44,12 @@ interface ActionEditorState {
   /** Piles d'annulation/rétablissement — snapshots de (frames, currentFrameId). */
   past: HistoryEntry[];
   future: HistoryEntry[];
+  /** Préférence d'affichage pure, jamais persistée : repart toujours à
+   * "portrait" au rechargement de la page (choix produit explicite, voir
+   * docs/PRD.md §4.8bis) — absente du modèle `Action` et exclue de la
+   * sauvegarde automatique ci-dessous. */
+  orientation: FieldOrientation;
+  setOrientation: (orientation: FieldOrientation) => void;
 
   /** Démarre une nouvelle action : crée la frame racine à partir d'un preset terrain + effectif. */
   start: (
@@ -147,6 +154,8 @@ export const useActionEditorStore = create<ActionEditorState>((set, get) => ({
   selectedEntityId: null,
   past: [],
   future: [],
+  orientation: "portrait",
+  setOrientation: (orientation) => set({ orientation }),
 
   start: (fieldConfig, initial, name) => {
     const rootId = crypto.randomUUID();

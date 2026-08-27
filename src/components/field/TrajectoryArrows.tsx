@@ -6,8 +6,8 @@ import { DISC_ARROW_COLOR, PLAYER_ARROW_COLOR } from "./theme";
 interface TrajectoryArrowsProps {
   frame: Frame;
   nextFrame: Frame;
-  toX: (percent: number) => number;
-  toY: (percent: number) => number;
+  toX: (widthPercent: number, lengthPercent: number) => number;
+  toY: (widthPercent: number, lengthPercent: number) => number;
 }
 
 /**
@@ -24,7 +24,12 @@ export function TrajectoryArrows({ frame, nextFrame, toX, toY }: TrajectoryArrow
     return [
       <Arrow
         key={next.id}
-        points={[toX(current.x), toY(current.y), toX(next.x), toY(next.y)]}
+        points={[
+          toX(current.x, current.y),
+          toY(current.x, current.y),
+          toX(next.x, next.y),
+          toY(next.x, next.y),
+        ]}
         stroke={PLAYER_ARROW_COLOR}
         fill={PLAYER_ARROW_COLOR}
         strokeWidth={2}
@@ -44,10 +49,15 @@ export function TrajectoryArrows({ frame, nextFrame, toX, toY }: TrajectoryArrow
   // contrôle est défini pour ce segment, sinon ligne droite (2 points).
   const discPoints = discControlPoint
     ? sampleQuadraticBezier(discFrom, discControlPoint, discTo, 24).flatMap((p) => [
-        toX(p.x),
-        toY(p.y),
+        toX(p.x, p.y),
+        toY(p.x, p.y),
       ])
-    : [toX(discFrom.x), toY(discFrom.y), toX(discTo.x), toY(discTo.y)];
+    : [
+        toX(discFrom.x, discFrom.y),
+        toY(discFrom.x, discFrom.y),
+        toX(discTo.x, discTo.y),
+        toY(discTo.x, discTo.y),
+      ];
 
   return (
     <>

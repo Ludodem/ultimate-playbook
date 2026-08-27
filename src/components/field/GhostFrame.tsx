@@ -4,8 +4,8 @@ import { DISC_FILL_COLOR, DISC_STROKE_COLOR, ENTITY_COLORS, ENTITY_LABEL_COLOR }
 
 interface GhostFrameProps {
   frame: Frame;
-  toX: (percent: number) => number;
-  toY: (percent: number) => number;
+  toX: (widthPercent: number, lengthPercent: number) => number;
+  toY: (widthPercent: number, lengthPercent: number) => number;
   entityRadius: number;
   discRadius: number;
 }
@@ -21,7 +21,7 @@ export function GhostFrame({ frame, toX, toY, entityRadius, discRadius }: GhostF
   return (
     <Group opacity={GHOST_OPACITY} listening={false}>
       {frame.entities.map((entity) => (
-        <Group key={entity.id} x={toX(entity.x)} y={toY(entity.y)}>
+        <Group key={entity.id} x={toX(entity.x, entity.y)} y={toY(entity.x, entity.y)}>
           <Circle
             radius={entityRadius}
             fill={ENTITY_COLORS[entity.team]}
@@ -44,8 +44,8 @@ export function GhostFrame({ frame, toX, toY, entityRadius, discRadius }: GhostF
       ))}
 
       <Circle
-        x={toX(frame.disc.x)}
-        y={toY(frame.disc.y)}
+        x={toX(frame.disc.x, frame.disc.y)}
+        y={toY(frame.disc.x, frame.disc.y)}
         radius={discRadius}
         fill={DISC_FILL_COLOR}
         stroke={DISC_STROKE_COLOR}

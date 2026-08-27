@@ -94,6 +94,10 @@ Issu des retours utilisateur post-Phase 7/8 (deux itérations d'implémentation 
 - **Un unique bouton de menu secondaire, flottant, en haut à droite du terrain.** Il donne accès (dans un panneau qui s'ouvre à la demande et se referme ensuite) à tout ce qui n'a pas besoin d'être vu en permanence : nom de l'action (affichage/édition), export JSON, nouvelle action, ajout de joueur (attaque/défense), undo/redo, bascule "frame fantôme", et les actions de frame secondaires listées ci-dessus. Fermé, ce bouton ne coûte qu'un coin d'écran ; ouvert, il peut recouvrir temporairement une partie du terrain sans que ce soit gênant, puisqu'on n'est pas en train de déplacer un joueur pendant qu'on renomme l'action.
 - **Sélectionner un joueur (tap, sans le glisser) ne fait apparaître aucun panneau flottant.** Le joueur sélectionné est simplement mis en évidence visuellement ; sa suppression passe par le glisser-déposer vers la corbeille (déjà existante) ou par le menu secondaire.
 
+### 4.8bis Orientation du terrain
+
+Réglage manuel (pas basé sur l'orientation physique de l'appareil), disponible y compris sur PC, dans le menu secondaire (§4.8) : **Portrait** (par défaut — l'attaque progresse de bas en haut) ou **Paysage** (l'attaque progresse de gauche à droite, terrain tourné à 90°). Préférence d'affichage pure, **non persistée** : repart toujours en portrait au rechargement de la page — un choix délibéré pour garder ce réglage simple au MVP plutôt que d'ajouter un mécanisme de sauvegarde dédié.
+
 ## 5. Hors scope du MVP (post-MVP, voir `docs/ROADMAP.md`)
 
 - Bibliothèque hiérarchisée de plays (dossiers + tags).

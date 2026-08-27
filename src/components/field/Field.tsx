@@ -5,6 +5,12 @@ import {
   computeEndzones,
   computeVisibleXRangePercent,
   endzoneGoalLine,
+  fitFieldStageSize,
+  projectRect,
+  projectToScreen,
+  unprojectFromScreen,
+  widthAxisPixelSpan,
+  type FieldOrientation,
 } from "../../domain/geometry";
 import type { FieldConfig, Frame } from "../../domain/models";
 import { resolveFieldColors } from "../../domain/presets/fieldColors";
@@ -53,6 +59,8 @@ interface FieldProps {
   discCurveEditor?: DiscCurveEditing;
   /** Frame précédente affichée en fantôme discret pendant l'édition (voir GhostFrame.tsx). */
   ghostFrame?: Frame;
+  /** Orientation d'affichage (voir docs/PRD.md §4.8bis) ; `portrait` par défaut. */
+  orientation?: FieldOrientation;
 }
 
 // Proportions des marqueurs relatives à la largeur du Stage — axe le plus
@@ -75,6 +83,7 @@ export function Field({
   nextFrame,
   discCurveEditor,
   ghostFrame,
+  orientation = "portrait",
 }: FieldProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
@@ -101,7 +110,6 @@ export function Field({
   // que de l'élargir, donc `width` représente déjà "100% de terrain" que la
   // marge soit active ou non — ni le terrain ni les entités ne rétrécissent.
   const range = computeVisibleXRangePercent(fieldConfig);
-  const rangeSpanPercent = range.max - range.min;
 
   // Le terrain occupe l'espace disponible en largeur OU en hauteur — celle
   // des deux qui est la plus contraignante (comme `object-fit: contain`) —
@@ -111,24 +119,33 @@ export function Field({
   // Si le conteneur n'a pas de hauteur définie par son parent (mesure initiale
   // à 0, ou mise en page desktop sans contrainte verticale explicite),
   // `containerSize.height` reste 0 et on retombe sur l'ancien calcul
-  // "dérivé de la largeur uniquement".
-  const aspectRatio = fieldConfig.lengthMeters / fieldConfig.widthMeters;
-  let width = containerSize.width;
-  let height = width * aspectRatio;
-  if (containerSize.height > 0 && height > containerSize.height) {
-    height = containerSize.height;
-    width = height / aspectRatio;
-  }
+  // "dérivé de la largeur uniquement". En landscape, les proportions
+  // s'inversent (voir `fitFieldStageSize`).
+  const { width, height } = fitFieldStageSize(
+    containerSize.width,
+    containerSize.height,
+    fieldConfig,
+    orientation,
+  );
 
   const colors = resolveFieldColors(fieldConfig.colors);
-  const toX = (percent: number) => ((percent - range.min) / rangeSpanPercent) * width;
-  const toY = (percent: number) => (percent / 100) * height;
-  const fromX = (px: number) => range.min + (px / width) * rangeSpanPercent;
-  const fromY = (py: number) => (py / height) * 100;
-  const entityRadius = width * ENTITY_RADIUS_RATIO;
-  const discRadius = width * DISC_RADIUS_RATIO;
-  const fieldLeft = toX(0);
-  const fieldRight = toX(100);
+  // `toX`/`toY` prennent toujours (largeur %, longueur %) dans cet ordre —
+  // c'est ce qui permet à tous les composants enfants de rester agnostiques
+  // de l'orientation (voir domain/geometry.ts `projectToScreen`).
+  const toX = (widthPercent: number, lengthPercent: number) =>
+    projectToScreen(widthPercent, lengthPercent, width, height, range, orientation).x;
+  const toY = (widthPercent: number, lengthPercent: number) =>
+    projectToScreen(widthPercent, lengthPercent, width, height, range, orientation).y;
+  const fromX = (screenX: number, screenY: number) =>
+    unprojectFromScreen(screenX, screenY, width, height, range, orientation).widthPercent;
+  const fromY = (screenX: number, screenY: number) =>
+    unprojectFromScreen(screenX, screenY, width, height, range, orientation).lengthPercent;
+  const rectFor = (w1: number, l1: number, w2: number, l2: number) =>
+    projectRect(w1, l1, w2, l2, width, height, range, orientation);
+  const radiusBase = widthAxisPixelSpan(width, height, orientation);
+  const entityRadius = radiusBase * ENTITY_RADIUS_RATIO;
+  const discRadius = radiusBase * DISC_RADIUS_RATIO;
+  const fieldRect = rectFor(range.min, 0, range.max, 100);
 
   // Zone "corbeille" affichée en coin supérieur droit du Stage pendant un drag
   // (coordonnées écran, indépendantes de la marge sideline éventuelle).
@@ -140,7 +157,7 @@ export function Field({
   const handleStageClick = (e: Konva.KonvaEventObject<Event>) => {
     if (!interactive) return;
     const pos = e.target.getStage()?.getPointerPosition();
-    if (pos) interactive.onFieldClick(fromX(pos.x), fromY(pos.y));
+    if (pos) interactive.onFieldClick(fromX(pos.x, pos.y), fromY(pos.x, pos.y));
   };
 
   return (
@@ -159,44 +176,30 @@ export function Field({
           <Layer>
             {/* Fond hors-ligne : recouvert par le rectangle terrain ci-dessous quand aucune marge n'est réservée. */}
             <Rect x={0} y={0} width={width} height={height} fill={colors.outOfBounds} />
-            <Rect
-              x={fieldLeft}
-              y={0}
-              width={fieldRight - fieldLeft}
-              height={height}
-              fill={colors.field}
-            />
+            <Rect {...fieldRect} fill={colors.field} />
 
             {computeEndzones(fieldConfig).map((band) => (
               <Rect
                 key={`${band.yStart}-${band.yEnd}`}
-                x={fieldLeft}
-                y={toY(band.yStart)}
-                width={fieldRight - fieldLeft}
-                height={toY(band.yEnd) - toY(band.yStart)}
+                {...rectFor(range.min, band.yStart, range.max, band.yEnd)}
                 fill={colors.endzone}
               />
             ))}
             {computeEndzones(fieldConfig).map((band) => {
-              const goalLineY = toY(endzoneGoalLine(band));
+              const goalLine = endzoneGoalLine(band);
+              const p1 = { x: toX(range.min, goalLine), y: toY(range.min, goalLine) };
+              const p2 = { x: toX(range.max, goalLine), y: toY(range.max, goalLine) };
               return (
                 <Line
                   key={`goal-line-${band.yStart}-${band.yEnd}`}
-                  points={[fieldLeft, goalLineY, fieldRight, goalLineY]}
+                  points={[p1.x, p1.y, p2.x, p2.y]}
                   stroke={colors.lines}
                   strokeWidth={LINE_WIDTH}
                 />
               );
             })}
 
-            <Rect
-              x={fieldLeft}
-              y={0}
-              width={fieldRight - fieldLeft}
-              height={height}
-              stroke={colors.lines}
-              strokeWidth={LINE_WIDTH}
-            />
+            <Rect {...fieldRect} stroke={colors.lines} strokeWidth={LINE_WIDTH} />
 
             {ghostFrame && (
               <GhostFrame
@@ -212,8 +215,8 @@ export function Field({
               <EntityMarker
                 key={entity.id}
                 entity={entity}
-                cx={toX(entity.x)}
-                cy={toY(entity.y)}
+                cx={toX(entity.x, entity.y)}
+                cy={toY(entity.x, entity.y)}
                 radius={entityRadius}
                 isSelected={interactive?.selectedEntityId === entity.id}
                 draggable={Boolean(interactive)}
@@ -237,7 +240,7 @@ export function Field({
                         if (droppedOnTrash) {
                           interactive.onEntityDelete(entity.id);
                         } else {
-                          interactive.onEntityMove(entity.id, fromX(px), fromY(py));
+                          interactive.onEntityMove(entity.id, fromX(px, py), fromY(px, py));
                         }
                       }
                     : undefined
@@ -254,7 +257,9 @@ export function Field({
               heldOffset={entityRadius}
               draggable={Boolean(interactive)}
               onDragEnd={
-                interactive ? (px, py) => interactive.onDiscMove(fromX(px), fromY(py)) : undefined
+                interactive
+                  ? (px, py) => interactive.onDiscMove(fromX(px, py), fromY(px, py))
+                  : undefined
               }
             />
 

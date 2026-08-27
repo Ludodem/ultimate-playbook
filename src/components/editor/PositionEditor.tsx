@@ -46,6 +46,8 @@ export function PositionEditor() {
   const redo = useActionEditorStore((s) => s.redo);
   const past = useActionEditorStore((s) => s.past);
   const future = useActionEditorStore((s) => s.future);
+  const orientation = useActionEditorStore((s) => s.orientation);
+  const setOrientation = useActionEditorStore((s) => s.setOrientation);
 
   if (!fieldConfig || !frame || !actionId || !createdAt || !updatedAt) return null;
 
@@ -112,6 +114,7 @@ export function PositionEditor() {
               <Field
                 fieldConfig={fieldConfig}
                 frame={frame}
+                orientation={orientation}
                 ghostFrame={showGhostFrame ? (previousFrame ?? undefined) : undefined}
                 interactive={{
                   selectedEntityId,
@@ -249,6 +252,26 @@ export function PositionEditor() {
                     {t("editor.toolbar.removeNamed", { label: selectedEntity.label })}
                   </button>
                 )}
+
+                <div className="menu-divider" />
+
+                <span className="menu-section-label">{t("editor.orientation.title")}</span>
+                <div className="orientation-switch">
+                  <button
+                    type="button"
+                    className={orientation === "portrait" ? "active" : ""}
+                    onClick={() => setOrientation("portrait")}
+                  >
+                    {t("editor.orientation.portrait")}
+                  </button>
+                  <button
+                    type="button"
+                    className={orientation === "landscape" ? "active" : ""}
+                    onClick={() => setOrientation("landscape")}
+                  >
+                    {t("editor.orientation.landscape")}
+                  </button>
+                </div>
 
                 <div className="menu-divider" />
 
