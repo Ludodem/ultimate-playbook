@@ -399,6 +399,18 @@ body {
   overflow-y: auto;
 }
 
+/* `PlaybackFrameTrail.tsx` réutilise `.frame-timeline` pour un rendu
+   identique à la barre Étapes de l'éditeur, mais nichée à l'intérieur de
+   `.playback-dock` (qui a déjà sa propre surface dédiée) : on retire donc son
+   propre fond/bordure/ombre pour ne pas doubler l'habillage. */
+.playback-frame-trail {
+  background: none;
+  border-top: none;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0 0 0.5rem;
+}
+
 /* Colonne latérale grand écran (docs/PRD.md §4.8bis/§4.8quater) : regroupe le
    contenu du menu ⋯ (`.editor-side-actions`, toujours visible ici — plus
    besoin de l'ouvrir puisque la place ne manque pas) et l'arbre complet des
@@ -690,6 +702,9 @@ button.danger:hover:not(:disabled) {
    ovale, voir plus bas) — pour ne plus les confondre au premier coup d'œil. */
 .frame-chip {
   flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-width: 44px;
   min-height: 44px; /* cible tactile, voir docs/PRD.md §4.7 */
   border-radius: var(--radius-sm);

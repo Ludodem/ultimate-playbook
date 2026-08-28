@@ -66,6 +66,7 @@ Couleurs par défaut : terrain en **gris** (neutre, façon sol de gymnase, ne co
 - **Pas à pas** : navigation manuelle frame par frame (précédent/suivant). Arrivé sur une frame à plusieurs branches, "suivant" devient un choix entre les options disponibles.
 - **Fluide** : animation continue interpolant les positions entre chaque paire de frames consécutives, avec vitesse réglable. S'il y a des branches, le chemin complet à jouer se choisit **avant** de lancer la lecture (jamais d'interruption en cours d'animation pour demander un choix).
 - Affichage des flèches de déplacement entre deux frames consécutives (trajectoire de chaque joueur, distinction visuelle passe de disque / course de joueur).
+- **Repère visuel "où en est-on dans l'arbre"**, dans les deux modes de lecture : même rendu que la barre Étapes de l'éditeur (§4.8), purement informatif (pas de navigation par clic — la lecture a son propre mécanisme d'avancement). En pas à pas, reflète la frame affichée ; en fluide, reflète la progression le long du chemin choisi (ou, avant que le chemin ne soit entièrement choisi, l'embranchement en cours de résolution) — dans les deux cas, les branches déjà choisies apparaissent visuellement distinguées des options encore ouvertes.
 
 ### 4.5 Trajectoire courbe du disque
 

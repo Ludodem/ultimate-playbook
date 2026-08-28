@@ -6,6 +6,7 @@ import { resolveTransitionMs } from "../../domain/playback";
 import { getChildren, resolvePath } from "../../domain/tree";
 import { useActionEditorStore } from "../../state/actionEditorStore";
 import { ForkChoice } from "./ForkChoice";
+import { PlaybackFrameTrail } from "./PlaybackFrameTrail";
 
 const SPEED_OPTIONS = [0.5, 1, 1.5, 2];
 
@@ -96,6 +97,11 @@ export function FluidPlayback() {
       ? buildInterpolatedFrame(path[segmentIndex], path[segmentIndex + 1], progress)
       : path[path.length - 1];
 
+  // Avant que le chemin ne soit entièrement choisi, `segmentIndex` reste à 0
+  // (l'animation n'a pas commencé) : la frame "en cours" pour la vue arbre est
+  // alors la dernière résolue (où on est en train de choisir), pas la racine.
+  const trailFrameId = isPathComplete ? (path[segmentIndex]?.id ?? null) : lastResolved.id;
+
   return (
     <>
       <div className="field-stage">
@@ -111,6 +117,8 @@ export function FluidPlayback() {
       </div>
 
       <div className="playback-dock">
+        <PlaybackFrameTrail currentFrameId={trailFrameId} />
+
         {!isPathComplete && <ForkChoice options={pendingOptions} onChoose={handleChoose} />}
 
         {isPathComplete && (

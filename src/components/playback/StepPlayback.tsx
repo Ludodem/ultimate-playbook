@@ -6,6 +6,7 @@ import { resolveTransitionMs } from "../../domain/playback";
 import { getChildren, getRootFrame } from "../../domain/tree";
 import { useActionEditorStore } from "../../state/actionEditorStore";
 import { ForkChoice } from "./ForkChoice";
+import { PlaybackFrameTrail } from "./PlaybackFrameTrail";
 
 /**
  * Lecture pas à pas (Phase 5, docs/ROADMAP.md) : navigation manuelle, choix
@@ -84,6 +85,8 @@ export function StepPlayback() {
       </div>
 
       <div className="playback-dock">
+        <PlaybackFrameTrail currentFrameId={currentFrame.id} />
+
         {children.length > 1 && (
           <ForkChoice options={children} onChoose={advanceTo} disabled={isAnimating} />
         )}
