@@ -108,7 +108,7 @@ Passe de polish sur les deux écrans les plus "bruts" visuellement à ce stade :
 
 - **Boutons et menus** (⋯, pastille Éditer/Jouer, panneaux) redessinés avec un vrai traitement de bouton (états hover/actif, cohérent avec les jetons de design existants `--accent`/`--radius`/`--shadow-*`) plutôt que le style HTML par défaut visible aujourd'hui sur certains boutons du menu secondaire.
 - **Écran de création d'action** repensé en tuiles cliquables avec icône, plutôt qu'un formulaire de `<fieldset>`/boutons radio :
-  - Terrain : 3 tuiles — **Demi-terrain**, **Terrain complet**, **Demi-terrain + longue ligne** (la case à cocher "marge sideline" actuelle devient une tuile à part entière plutôt qu'une option orthogonale). "Terrain indéfini" retiré de cet écran (reste accessible via import JSON d'une action existante).
+  - Terrain : 3 tuiles — **Demi-terrain**, **Terrain complet**, **Demi-terrain + sideline** (la case à cocher "marge sideline" actuelle devient une tuile à part entière plutôt qu'une option orthogonale). "Terrain indéfini" retiré de cet écran (reste accessible via import JSON d'une action existante).
   - Effectif : 3 tuiles — **Stack vertical**, **Stack horizontal**, **Vide**.
   - Icônes en **SVG dédiés** (petit set cohérent avec le reste de l'identité visuelle), pas des emoji.
 

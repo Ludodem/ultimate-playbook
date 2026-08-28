@@ -9,7 +9,7 @@
       "fieldType": "Terrain",
       "fieldTypeHalf": "Demi-terrain",
       "fieldTypeFull": "Terrain complet",
-      "fieldTypeSideline": "Demi-terrain + longue ligne",
+      "fieldTypeSideline": "Demi-terrain + sideline",
       "roster": "Effectif de départ",
       "rosterEmpty": "Vide",
       "rosterVertical": "5v5 — Stack vertical",
