@@ -54,14 +54,11 @@ describe.each<[string, () => RosterPreset]>([
   it("mirrors D1's mark to the left of H1, opposite the stack's defenders (right)", () => {
     const { entities } = buildPreset();
     const h1 = entities.find((e) => e.label === "H1")!;
-    const h2 = entities.find((e) => e.label === "H2")!;
     const d1 = entities.find((e) => e.label === "D1")!;
-    const d2 = entities.find((e) => e.label === "D2")!;
     const cutter1 = entities.find((e) => e.label === "1")!;
     const d3 = entities.find((e) => e.label === "D3")!;
 
     expect(d1.x).toBeLessThan(h1.x); // D1 force à gauche, retour utilisateur direct
-    expect(d2.x).toBeGreaterThan(h2.x); // D2 reste du même côté que le reste du stack
     expect(d3.x).toBeGreaterThan(cutter1.x); // défenseurs du stack, pour référence
   });
 
@@ -69,5 +66,26 @@ describe.each<[string, () => RosterPreset]>([
     const { entities } = buildPreset();
     expect(new Set(entities.map((e) => e.id)).size).toBe(entities.length);
     expect(new Set(entities.map((e) => e.label)).size).toBe(entities.length);
+  });
+});
+
+describe("fiveVFiveHorizontalStackPreset", () => {
+  it("keeps D2 on the same side as the rest of the stack's defenders (right of H2)", () => {
+    const { entities } = fiveVFiveHorizontalStackPreset();
+    const h2 = entities.find((e) => e.label === "H2")!;
+    const d2 = entities.find((e) => e.label === "D2")!;
+    expect(d2.x).toBeGreaterThan(h2.x);
+  });
+});
+
+describe("fiveVFiveVerticalStackPreset", () => {
+  it("hand-tuned layout: marks H2 from the inside (left) rather than the sideline", () => {
+    // Contrairement au preset horizontal, ce layout vient d'un export JSON
+    // ajusté à la main par l'utilisateur (voir docs/ARCHITECTURE.md §8) — D2 y
+    // marque H2 par l'intérieur, pas seulement D1 sur H1.
+    const { entities } = fiveVFiveVerticalStackPreset();
+    const h2 = entities.find((e) => e.label === "H2")!;
+    const d2 = entities.find((e) => e.label === "D2")!;
+    expect(d2.x).toBeLessThan(h2.x);
   });
 });
