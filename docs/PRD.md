@@ -56,7 +56,7 @@ Couleurs par défaut : terrain en **gris** (neutre, façon sol de gymnase, ne co
 - Créer une nouvelle frame **duplique la frame courante** (positions de départ = positions de la frame précédente), pour ne repositionner que ce qui change. C'est l'action par défaut : elle crée une continuation simple (un seul enfant), le cas de figure le plus courant reste donc aussi simple qu'avant.
 - Créer une **branche** à partir de n'importe quelle frame ("ajouter une option depuis cette frame") : action distincte de la précédente, elle demande un nom court par branche (ex. "Autour", "Strike"). Si la frame n'avait jusque-là qu'une seule continuation, celle-ci doit être nommée rétroactivement au moment où le fork est créé.
 - Réordonner, dupliquer, supprimer une frame via une bande de vignettes (timeline), qui se scinde visuellement en pistes parallèles à partir d'un embranchement.
-- Déplacer une entité par glisser-déposer (souris ET tactile).
+- Déplacer une entité par glisser-déposer (souris ET tactile). Le disque, plus petit à l'écran (surtout sur smartphone), a une zone de glisser-déposer étendue au-delà de son rayon visuel pour rester attrapable sans agrandir le disque lui-même.
 - Assigner le disque à un joueur (le disque suit alors sa position) ou le positionner librement (ex. disque en vol entre deux frames).
 - Annoter une frame avec une note texte libre (ex. "coupe et swing").
 - Undo/redo sur les actions d'édition.
@@ -65,7 +65,7 @@ Couleurs par défaut : terrain en **gris** (neutre, façon sol de gymnase, ne co
 
 - **Pas à pas** : navigation manuelle frame par frame (précédent/suivant). Arrivé sur une frame à plusieurs branches, "suivant" devient un choix entre les options disponibles.
 - **Fluide** : animation continue interpolant les positions entre chaque paire de frames consécutives, avec vitesse réglable. S'il y a des branches, le chemin complet à jouer se choisit **avant** de lancer la lecture (jamais d'interruption en cours d'animation pour demander un choix).
-- Affichage des flèches de déplacement entre deux frames consécutives (trajectoire de chaque joueur, distinction visuelle passe de disque / course de joueur).
+- Affichage des flèches de déplacement entre deux frames consécutives (trajectoire de chaque joueur **offense** uniquement — l'outil est pensé pour des plays d'attaque, les flèches défense n'ajoutaient que du bruit visuel — et du disque, distinction visuelle passe de disque / course de joueur).
 - **Repère visuel "où en est-on dans l'arbre"**, dans les deux modes de lecture : même rendu que la barre Étapes de l'éditeur (§4.8), purement informatif (pas de navigation par clic — la lecture a son propre mécanisme d'avancement). En pas à pas, reflète la frame affichée ; en fluide, reflète la progression le long du chemin choisi (ou, avant que le chemin ne soit entièrement choisi, l'embranchement en cours de résolution) — dans les deux cas, les branches déjà choisies apparaissent visuellement distinguées des options encore ouvertes.
 
 ### 4.5 Trajectoire courbe du disque

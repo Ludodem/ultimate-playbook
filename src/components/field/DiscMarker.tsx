@@ -4,6 +4,12 @@ import { findColocatedEntity } from "../../domain/disc";
 import type { Disc, Entity } from "../../domain/models";
 import { DISC_FILL_COLOR, DISC_STROKE_COLOR } from "./theme";
 
+/** Rayon minimal de zone de glisser-déposer, indépendant du rayon visuel du
+ * disque (souvent bien plus petit sur mobile) — cible tactile ~44px de
+ * diamètre, voir docs/PRD.md §4.7. Retour utilisateur direct : "le disque est
+ * très dur à drag sur mobile". */
+const MIN_HIT_RADIUS = 22;
+
 interface DiscMarkerProps {
   disc: Disc;
   entities: Entity[];
@@ -37,6 +43,12 @@ export function DiscMarker({
     onDragEnd?.(e.target.x(), e.target.y());
   };
 
+  // Étend la zone de détection (tap/drag) au-delà du rayon visuel via
+  // `hitStrokeWidth`, sans agrandir le disque à l'écran : Konva calcule le hit
+  // test sur un canvas séparé, donc ce rayon "fantôme" n'apparaît jamais dans
+  // le rendu — seul `strokeWidth` (visuel) reste inchangé.
+  const hitStrokeWidth = Math.max(0, (MIN_HIT_RADIUS - radius) * 2);
+
   return (
     <Circle
       x={toX(disc.x, disc.y) + offset}
@@ -45,6 +57,7 @@ export function DiscMarker({
       fill={DISC_FILL_COLOR}
       stroke={DISC_STROKE_COLOR}
       strokeWidth={1.5}
+      hitStrokeWidth={hitStrokeWidth}
       draggable={draggable}
       onDragEnd={draggable ? handleDragEnd : undefined}
     />

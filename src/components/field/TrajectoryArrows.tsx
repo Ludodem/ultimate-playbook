@@ -12,33 +12,38 @@ interface TrajectoryArrowsProps {
 
 /**
  * Flèches indiquant la trajectoire vers la frame suivante en mode lecture pas
- * à pas (Phase 5) : une flèche pleine par joueur en mouvement, une flèche
- * pointillée pour le disque — voir docs/PRD.md §4.4.
+ * à pas (Phase 5) : une flèche pleine par joueur **offense** en mouvement
+ * (les défenseurs n'en ont pas — l'outil est pensé pour des plays d'attaque,
+ * les flèches défense n'ajoutaient que du bruit visuel, retour utilisateur
+ * direct voir docs/ARCHITECTURE.md §8), une flèche pointillée pour le disque
+ * — voir docs/PRD.md §4.4.
  */
 export function TrajectoryArrows({ frame, nextFrame, toX, toY }: TrajectoryArrowsProps) {
   const currentById = new Map(frame.entities.map((e) => [e.id, e]));
 
-  const playerArrows = nextFrame.entities.flatMap((next) => {
-    const current = currentById.get(next.id);
-    if (!current || (current.x === next.x && current.y === next.y)) return [];
-    return [
-      <Arrow
-        key={next.id}
-        points={[
-          toX(current.x, current.y),
-          toY(current.x, current.y),
-          toX(next.x, next.y),
-          toY(next.x, next.y),
-        ]}
-        stroke={PLAYER_ARROW_COLOR}
-        fill={PLAYER_ARROW_COLOR}
-        strokeWidth={2}
-        pointerLength={8}
-        pointerWidth={8}
-        listening={false}
-      />,
-    ];
-  });
+  const playerArrows = nextFrame.entities
+    .filter((entity) => entity.team === "offense")
+    .flatMap((next) => {
+      const current = currentById.get(next.id);
+      if (!current || (current.x === next.x && current.y === next.y)) return [];
+      return [
+        <Arrow
+          key={next.id}
+          points={[
+            toX(current.x, current.y),
+            toY(current.x, current.y),
+            toX(next.x, next.y),
+            toY(next.x, next.y),
+          ]}
+          stroke={PLAYER_ARROW_COLOR}
+          fill={PLAYER_ARROW_COLOR}
+          strokeWidth={2}
+          pointerLength={8}
+          pointerWidth={8}
+          listening={false}
+        />,
+      ];
+    });
 
   const discFrom = frame.disc;
   const discTo = nextFrame.disc;
