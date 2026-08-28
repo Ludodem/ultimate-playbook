@@ -39,6 +39,11 @@ const MARK_DY = -3;
 const HANDLER_MARK_DX = 5;
 const HANDLER_MARK_DY = 9;
 
+// Le marqueur du porteur du disque (D1) force à GAUCHE — donc décalé à
+// gauche de H1 — délibérément à l'opposé des défenseurs du stack (décalés à
+// droite, `MARK_DX` positif) : une force cohérente sur tout l'effectif
+// pousserait tous les défenseurs du même côté, pas seulement celui du
+// porteur. Retour utilisateur direct, voir docs/ARCHITECTURE.md §8.
 export function fiveVFiveVerticalStackPreset(): RosterPreset {
   const h1 = entity("offense", "H1", 50, 80);
   const h2 = entity("offense", "H2", 30, 92);
@@ -48,7 +53,7 @@ export function fiveVFiveVerticalStackPreset(): RosterPreset {
     entity("offense", "1", 50, 55),
     entity("offense", "2", 50, 43),
     entity("offense", "3", 50, 31),
-    entity("defense", "D1", h1.x + HANDLER_MARK_DX, h1.y - HANDLER_MARK_DY),
+    entity("defense", "D1", h1.x - HANDLER_MARK_DX, h1.y - HANDLER_MARK_DY),
     entity("defense", "D2", h2.x + HANDLER_MARK_DX, h2.y - HANDLER_MARK_DY),
     entity("defense", "D3", 50 + MARK_DX, 55 + MARK_DY),
     entity("defense", "D4", 50 + MARK_DX, 43 + MARK_DY),
@@ -69,7 +74,7 @@ export function fiveVFiveHorizontalStackPreset(): RosterPreset {
     entity("offense", "1", 25, 55),
     entity("offense", "2", 50, 55),
     entity("offense", "3", 75, 55),
-    entity("defense", "D1", h1.x + HANDLER_MARK_DX, h1.y - HANDLER_MARK_DY),
+    entity("defense", "D1", h1.x - HANDLER_MARK_DX, h1.y - HANDLER_MARK_DY),
     entity("defense", "D2", h2.x + HANDLER_MARK_DX, h2.y - HANDLER_MARK_DY),
     entity("defense", "D3", 25 + MARK_DX, 55 + MARK_DY),
     entity("defense", "D4", 50 + MARK_DX, 55 + MARK_DY),

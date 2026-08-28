@@ -2,12 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Field } from "../field";
 import { PlaybackView } from "../playback";
-import { actionFileName, buildAction } from "../../domain/action";
 import type { Position } from "../../domain/disc";
 import { fitFieldStageSize } from "../../domain/geometry";
 import { controlPointForMidpoint, curveMidpoint } from "../../domain/interpolation";
 import { MAX_RECOMMENDED_PER_TEAM, useActionEditorStore } from "../../state/actionEditorStore";
-import { FrameActionsMenu } from "./FrameActionsMenu";
+import { EditorActionsPanel } from "./EditorActionsPanel";
 import { FrameTimeline } from "./FrameTimeline";
 import { FrameTreePanel } from "./FrameTreePanel";
 
@@ -23,10 +22,14 @@ type ViewMode = "edit" | "play";
 const SIDE_PANEL_MIN_SLACK = 280;
 
 /**
- * Éditeur de positions d'une action en cours (Phases 3-8, docs/ROADMAP.md).
- * Disposition : le terrain occupe tout l'écran en continu, la barre Frames a
- * un espace dédié (jamais posée par-dessus le terrain), et tout le reste vit
- * derrière un unique menu ⋯ — voir docs/PRD.md §4.8.
+ * Éditeur de positions d'une action en cours (Phases 3-9, docs/ROADMAP.md).
+ * Disposition : le terrain occupe tout l'écran en continu, la vue Frames a un
+ * espace dédié (jamais posée par-dessus le terrain) — voir docs/PRD.md §4.8.
+ * Sur grand écran (assez d'espace mesuré à côté du terrain, `useSidePanel`),
+ * le contenu du menu ⋯ (`EditorActionsPanel`) est affiché en permanence dans
+ * la colonne latérale plutôt que derrière un bouton à ouvrir — voir
+ * docs/PRD.md §4.8quater. Sur écran étroit, il reste replié derrière le
+ * bouton ⋯, seule option qui laisse assez de place au terrain.
  */
 export function PositionEditor() {
   const { t } = useTranslation();
@@ -35,13 +38,8 @@ export function PositionEditor() {
   const [showGhostFrame, setShowGhostFrame] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
   const actionId = useActionEditorStore((s) => s.actionId);
-  const actionName = useActionEditorStore((s) => s.actionName);
-  const setActionName = useActionEditorStore((s) => s.setActionName);
-  const tags = useActionEditorStore((s) => s.tags);
-  const defaultTransitionMs = useActionEditorStore((s) => s.defaultTransitionMs);
   const createdAt = useActionEditorStore((s) => s.createdAt);
   const updatedAt = useActionEditorStore((s) => s.updatedAt);
-  const resetToSetup = useActionEditorStore((s) => s.resetToSetup);
   const fieldConfig = useActionEditorStore((s) => s.fieldConfig);
   const frames = useActionEditorStore((s) => s.frames);
   const currentFrameId = useActionEditorStore((s) => s.currentFrameId);
@@ -50,15 +48,9 @@ export function PositionEditor() {
   const selectEntity = useActionEditorStore((s) => s.selectEntity);
   const moveEntity = useActionEditorStore((s) => s.moveEntity);
   const moveDisc = useActionEditorStore((s) => s.moveDisc);
-  const addEntity = useActionEditorStore((s) => s.addEntity);
   const removeEntity = useActionEditorStore((s) => s.removeEntity);
   const setDiscCurveControlPoint = useActionEditorStore((s) => s.setDiscCurveControlPoint);
-  const undo = useActionEditorStore((s) => s.undo);
-  const redo = useActionEditorStore((s) => s.redo);
-  const past = useActionEditorStore((s) => s.past);
-  const future = useActionEditorStore((s) => s.future);
   const orientation = useActionEditorStore((s) => s.orientation);
-  const setOrientation = useActionEditorStore((s) => s.setOrientation);
 
   const editorMainRef = useRef<HTMLDivElement>(null);
   const [useSidePanel, setUseSidePanel] = useState(false);
@@ -85,27 +77,6 @@ export function PositionEditor() {
 
   if (!fieldConfig || !frame || !actionId || !createdAt || !updatedAt) return null;
 
-  const handleExport = () => {
-    const action = buildAction({
-      id: actionId,
-      name: actionName,
-      tags,
-      fieldConfig,
-      defaultTransitionMs,
-      frames,
-      createdAt,
-      updatedAt,
-    });
-    const blob = new Blob([JSON.stringify(action, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = actionFileName(actionName);
-    link.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const selectedEntity = frame.entities.find((e) => e.id === selectedEntityId) ?? null;
   const offenseCount = frame.entities.filter((e) => e.team === "offense").length;
   const defenseCount = frame.entities.filter((e) => e.team === "defense").length;
   const showRosterWarning =
@@ -204,7 +175,19 @@ export function PositionEditor() {
             )}
           </div>
 
-          {useSidePanel ? <FrameTreePanel /> : <FrameTimeline />}
+          {useSidePanel ? (
+            <div className="editor-side-column">
+              <div className="editor-side-actions">
+                <EditorActionsPanel
+                  showGhostFrame={showGhostFrame}
+                  onToggleGhostFrame={setShowGhostFrame}
+                />
+              </div>
+              <FrameTreePanel />
+            </div>
+          ) : (
+            <FrameTimeline />
+          )}
         </div>
       )}
 
@@ -225,7 +208,7 @@ export function PositionEditor() {
         </button>
       </div>
 
-      {viewMode === "edit" && (
+      {viewMode === "edit" && !useSidePanel && (
         <>
           <button
             type="button"
@@ -241,90 +224,10 @@ export function PositionEditor() {
             <>
               <div className="menu-scrim" onClick={closeMenu} />
               <div className="menu-panel">
-                <span className="menu-section-label">{t("editor.setup.name")}</span>
-                <input
-                  type="text"
-                  className="action-name-input"
-                  value={actionName}
-                  onChange={(e) => setActionName(e.target.value)}
-                  aria-label={t("editor.setup.name")}
+                <EditorActionsPanel
+                  showGhostFrame={showGhostFrame}
+                  onToggleGhostFrame={setShowGhostFrame}
                 />
-                <div className="menu-group">
-                  <button type="button" onClick={handleExport}>
-                    {t("editor.toolbar.export")}
-                  </button>
-                  <button type="button" onClick={resetToSetup}>
-                    {t("editor.toolbar.newAction")}
-                  </button>
-                </div>
-
-                <div className="menu-divider" />
-
-                <div className="menu-group">
-                  <button type="button" onClick={() => addEntity("offense")}>
-                    {t("editor.toolbar.addOffense")}
-                  </button>
-                  <button type="button" onClick={() => addEntity("defense")}>
-                    {t("editor.toolbar.addDefense")}
-                  </button>
-                </div>
-                <div className="menu-group">
-                  <button type="button" onClick={undo} disabled={past.length === 0}>
-                    {t("editor.toolbar.undo")}
-                  </button>
-                  <button type="button" onClick={redo} disabled={future.length === 0}>
-                    {t("editor.toolbar.redo")}
-                  </button>
-                </div>
-                {selectedEntity && (
-                  <button
-                    type="button"
-                    className="danger"
-                    onClick={() => {
-                      removeEntity(selectedEntity.id);
-                    }}
-                  >
-                    {t("editor.toolbar.removeNamed", { label: selectedEntity.label })}
-                  </button>
-                )}
-
-                <div className="menu-divider" />
-
-                <span className="menu-section-label">{t("editor.orientation.title")}</span>
-                <div className="orientation-switch">
-                  <button
-                    type="button"
-                    className={orientation === "portrait" ? "active" : ""}
-                    onClick={() => setOrientation("portrait")}
-                  >
-                    {t("editor.orientation.portrait")}
-                  </button>
-                  <button
-                    type="button"
-                    className={orientation === "landscape" ? "active" : ""}
-                    onClick={() => setOrientation("landscape")}
-                  >
-                    {t("editor.orientation.landscape")}
-                  </button>
-                </div>
-
-                <div className="menu-divider" />
-
-                {previousFrame && (
-                  <label className="checkbox-option ghost-toggle">
-                    <input
-                      type="checkbox"
-                      checked={showGhostFrame}
-                      onChange={(e) => setShowGhostFrame(e.target.checked)}
-                    />
-                    {t("editor.toolbar.ghostFrameToggle")}
-                  </label>
-                )}
-
-                <div className="menu-divider" />
-
-                <span className="menu-section-label">{t("editor.frames.title")}</span>
-                <FrameActionsMenu />
               </div>
             </>
           )}

@@ -399,19 +399,42 @@ body {
   overflow-y: auto;
 }
 
-/* Panneau latéral "arbre complet" (`FrameTreePanel.tsx`, grand écran, voir
-   docs/PRD.md §4.8bis) : même traitement de surface dédiée que
-   `.frame-timeline`/`.playback-dock` (jamais un recouvrement du terrain),
-   mais en colonne verticale à droite plutôt qu'en bande horizontale en bas. */
-.frame-tree-panel {
+/* Colonne latérale grand écran (docs/PRD.md §4.8bis/§4.8quater) : regroupe le
+   contenu du menu ⋯ (`.editor-side-actions`, toujours visible ici — plus
+   besoin de l'ouvrir puisque la place ne manque pas) et l'arbre complet des
+   frames (`.frame-tree-panel`) dans une même surface dédiée, jamais un
+   recouvrement du terrain — même traitement que `.frame-timeline`/
+   `.playback-dock`, en colonne verticale à droite plutôt qu'en bande
+   horizontale en bas. */
+.editor-side-column {
   flex: none;
-  width: 280px;
+  width: 300px;
   display: flex;
   flex-direction: column;
   min-height: 0;
   background: var(--surface-raised);
   border-left: 1px solid var(--border);
   box-shadow: -4px 0 16px rgba(15, 23, 42, 0.08);
+}
+
+.editor-side-actions {
+  flex: 0 1 auto;
+  min-height: 0;
+  max-height: 55%;
+  overflow-y: auto;
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.editor-side-actions > .menu-section-label:first-child {
+  margin-top: 0;
+}
+
+.frame-tree-panel {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
   padding: 0.6rem;
 }
 

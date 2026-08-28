@@ -20,6 +20,6 @@ describe("App", () => {
 
     expect(screen.queryByRole("heading", { name: "Nouvelle action" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Menu" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Aller à la frame 1" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Aller à l'étape 1" })).toBeInTheDocument();
   });
 });
