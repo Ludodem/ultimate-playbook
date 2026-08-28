@@ -22,8 +22,8 @@
     },
     "toolbar": {
       "menu": "Menu",
-      "addOffense": "+ Attaque",
-      "addDefense": "+ Défense",
+      "addOffense": "Ajouter un attaquant",
+      "addDefense": "Ajouter un défenseur",
       "undo": "Annuler",
       "redo": "Rétablir",
       "rosterWarning": "Effectif élevé : l'affichage peut devenir difficile à lire au-delà de {{max}} joueurs par équipe.",
@@ -40,8 +40,6 @@
       "branchLabelPlaceholder": "Nom de la branche (ex. Strike)",
       "confirm": "Valider",
       "cancel": "Annuler",
-      "moveUp": "↑ Monter",
-      "moveDown": "↓ Descendre",
       "delete": "Supprimer l'étape",
       "branchLabel": "Nom de cette branche",
       "note": "Note"

@@ -1,6 +1,8 @@
 import { useTranslation } from "react-i18next";
 import { actionFileName, buildAction } from "../../domain/action";
 import { useActionEditorStore } from "../../state/actionEditorStore";
+import { ENTITY_COLORS } from "../field/theme";
+import { PlayerPlusIcon } from "../icons/ActionIcons";
 import { FrameActionsMenu } from "./FrameActionsMenu";
 
 interface EditorActionsPanelProps {
@@ -92,19 +94,41 @@ export function EditorActionsPanel({
       <div className="menu-divider" />
 
       <div className="menu-group">
-        <button type="button" onClick={() => addEntity("offense")}>
-          {t("editor.toolbar.addOffense")}
+        <button
+          type="button"
+          className="roster-add-tile"
+          style={{ backgroundColor: ENTITY_COLORS.offense }}
+          onClick={() => addEntity("offense")}
+          aria-label={t("editor.toolbar.addOffense")}
+        >
+          <PlayerPlusIcon />
         </button>
-        <button type="button" onClick={() => addEntity("defense")}>
-          {t("editor.toolbar.addDefense")}
+        <button
+          type="button"
+          className="roster-add-tile"
+          style={{ backgroundColor: ENTITY_COLORS.defense }}
+          onClick={() => addEntity("defense")}
+          aria-label={t("editor.toolbar.addDefense")}
+        >
+          <PlayerPlusIcon />
         </button>
-      </div>
-      <div className="menu-group">
-        <button type="button" onClick={undo} disabled={past.length === 0}>
-          {t("editor.toolbar.undo")}
+        <button
+          type="button"
+          className="icon-button"
+          onClick={undo}
+          disabled={past.length === 0}
+          aria-label={t("editor.toolbar.undo")}
+        >
+          ↶
         </button>
-        <button type="button" onClick={redo} disabled={future.length === 0}>
-          {t("editor.toolbar.redo")}
+        <button
+          type="button"
+          className="icon-button"
+          onClick={redo}
+          disabled={future.length === 0}
+          aria-label={t("editor.toolbar.redo")}
+        >
+          ↷
         </button>
       </div>
       {selectedEntity && (

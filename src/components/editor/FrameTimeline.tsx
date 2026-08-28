@@ -2,13 +2,14 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { BRANCH_COLOR_COUNT, computeCurrentPathView, getChildren } from "../../domain/tree";
 import { useActionEditorStore } from "../../state/actionEditorStore";
+import { TrashIcon } from "../icons/ActionIcons";
 
 /**
  * Barre "Frames" toujours visible, en espace dédié (jamais posée par-dessus
  * le terrain) — voir docs/PRD.md §4.8. Se limite à la navigation (chemin
- * courant + embranchements traversés) et aux deux actions les plus fréquentes
- * en construisant un play (frame suivante, nouvelle branche) : le reste
- * (renommage, réordonnancement, suppression, note) vit dans le menu
+ * courant + embranchements traversés) et aux actions les plus fréquentes en
+ * construisant un play (frame suivante, nouvelle branche, supprimer l'étape
+ * courante) : le reste (renommage de branche, note) vit dans le menu
  * secondaire (`FrameActionsMenu.tsx`).
  */
 export function FrameTimeline() {
@@ -18,6 +19,7 @@ export function FrameTimeline() {
   const selectFrame = useActionEditorStore((s) => s.selectFrame);
   const addNextFrame = useActionEditorStore((s) => s.addNextFrame);
   const addBranch = useActionEditorStore((s) => s.addBranch);
+  const deleteFrame = useActionEditorStore((s) => s.deleteFrame);
 
   const [isAddingBranch, setIsAddingBranch] = useState(false);
   const [branchLabelDraft, setBranchLabelDraft] = useState("");
@@ -28,6 +30,7 @@ export function FrameTimeline() {
   if (segments.length === 0) return null;
 
   const canExtend = getChildren(frames, currentFrameId).length === 0;
+  const isRoot = frames.find((f) => f.id === currentFrameId)?.parentId === null;
 
   // Nom de la branche la plus proche de la position courante (dernier
   // embranchement résolu du chemin), affiché dans le libellé de la barre pour
@@ -121,6 +124,15 @@ export function FrameTimeline() {
             aria-label={t("editor.frames.next")}
           >
             +
+          </button>
+          <button
+            type="button"
+            className="chip-delete"
+            onClick={() => deleteFrame(currentFrameId)}
+            disabled={isRoot}
+            aria-label={t("editor.frames.delete")}
+          >
+            <TrashIcon />
           </button>
         </div>
       </div>

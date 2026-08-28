@@ -872,6 +872,67 @@ button.danger:hover:not(:disabled) {
   font-weight: 700;
 }
 
+/* Bouton "supprimer cette étape", à côté du "+" — rouge, pour le distinguer
+   clairement d'une action neutre (retour utilisateur : plus de section
+   "Étapes" séparée avec monter/descendre/supprimer, jugée inutile). */
+.chip-delete {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: var(--danger);
+  color: #fff;
+}
+
+.chip-delete svg {
+  width: 20px;
+  height: 20px;
+}
+
+.chip-delete:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+/* Tuile carrée colorée par équipe pour "ajouter un joueur" (menu secondaire) —
+   la couleur vient de `ENTITY_COLORS` (`field/theme.ts`, même source que les
+   pastilles sur le terrain), appliquée en style inline plutôt qu'en classe
+   CSS pour ne pas dupliquer ces valeurs. */
+.roster-add-tile {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: #fff;
+}
+
+.roster-add-tile svg {
+  width: 24px;
+  height: 24px;
+}
+
+.roster-add-tile:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+/* Bouton compact ne portant qu'un glyphe (undo/redo) — la base `button`
+   dimensionne pour du texte, trop large pour un seul caractère. */
+.icon-button {
+  flex: none;
+  min-width: 44px;
+  padding: 0.5rem;
+  font-size: 1.2rem;
+}
+
 .branch-form {
   display: flex;
   gap: 0.5rem;

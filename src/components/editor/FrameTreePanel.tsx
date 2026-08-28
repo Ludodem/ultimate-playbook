@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { computeFullTreeRows, getChildren } from "../../domain/tree";
 import { useActionEditorStore } from "../../state/actionEditorStore";
+import { TrashIcon } from "../icons/ActionIcons";
 
 /**
  * Panneau "Frames" en colonne latérale (grand écran, voir docs/PRD.md
@@ -19,6 +20,7 @@ export function FrameTreePanel() {
   const selectFrame = useActionEditorStore((s) => s.selectFrame);
   const addNextFrame = useActionEditorStore((s) => s.addNextFrame);
   const addBranch = useActionEditorStore((s) => s.addBranch);
+  const deleteFrame = useActionEditorStore((s) => s.deleteFrame);
 
   const [isAddingBranch, setIsAddingBranch] = useState(false);
   const [branchLabelDraft, setBranchLabelDraft] = useState("");
@@ -27,6 +29,7 @@ export function FrameTreePanel() {
 
   const rows = computeFullTreeRows(frames);
   const canExtend = getChildren(frames, currentFrameId).length === 0;
+  const isRoot = frames.find((f) => f.id === currentFrameId)?.parentId === null;
 
   const handleConfirmBranch = () => {
     const label = branchLabelDraft.trim();
@@ -76,6 +79,15 @@ export function FrameTreePanel() {
           aria-label={t("editor.frames.next")}
         >
           +
+        </button>
+        <button
+          type="button"
+          className="chip-delete"
+          onClick={() => deleteFrame(currentFrameId)}
+          disabled={isRoot}
+          aria-label={t("editor.frames.delete")}
+        >
+          <TrashIcon />
         </button>
       </div>
 
