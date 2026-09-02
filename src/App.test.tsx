@@ -10,10 +10,11 @@ describe("App", () => {
     expect(screen.getByText("Ultimate Playbook")).toBeInTheDocument();
   });
 
-  it("switches from the setup screen to the position editor after starting", async () => {
+  it("switches from the library to the setup screen, then to the position editor after starting", async () => {
     const user = userEvent.setup();
     render(<App />);
 
+    await user.click(screen.getByRole("button", { name: "+ Nouvelle action" }));
     expect(screen.getByRole("heading", { name: "Nouvelle action" })).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Commencer" }));

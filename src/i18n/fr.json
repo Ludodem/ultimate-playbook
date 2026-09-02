@@ -58,6 +58,19 @@
       "reset": "Trajectoire rectiligne"
     }
   },
+  "library": {
+    "createNew": "+ Nouvelle action",
+    "backToLibrary": "← Bibliothèque",
+    "root": "Bibliothèque",
+    "unclassified": "Non classé",
+    "empty": "Aucune action sauvegardée pour l'instant.",
+    "duplicate": "Dupliquer",
+    "delete": "Supprimer",
+    "classification": "Classement",
+    "category": "Catégorie",
+    "system": "Système",
+    "variant": "Variante"
+  },
   "playback": {
     "mode": {
       "step": "Pas à pas",

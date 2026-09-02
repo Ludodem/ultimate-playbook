@@ -87,8 +87,11 @@ export interface Action {
   id: string;
   schemaVersion: 1;
   name: string;
-  /** Libre, ex: ["stack vertical", "iso"] — utilisé par la future bibliothèque. */
-  tags: string[];
+  /** Classement hiérarchique de la bibliothèque (docs/PRD.md §4.10) : texte
+   * libre à chaque niveau, tous optionnels — absent = "Non classé" à ce niveau. */
+  category?: string;
+  system?: string;
+  variant?: string;
   fieldConfig: FieldConfig;
   /** Durée par défaut d'une transition en mode fluide (ex: 1200). */
   defaultTransitionMs: number;

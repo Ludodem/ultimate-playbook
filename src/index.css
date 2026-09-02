@@ -178,6 +178,122 @@ body {
   display: none;
 }
 
+.setup-back-link {
+  background: none;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  min-height: auto;
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.classification-field {
+  display: block;
+  margin: 0.5rem 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.classification-field input {
+  display: block;
+  width: 100%;
+  min-height: 40px;
+  margin-top: 0.2rem;
+  font-weight: 400;
+  color: var(--text);
+}
+
+/* Écran Bibliothèque (Phase 10, docs/PRD.md §4.10). */
+.library-view {
+  max-width: 640px;
+  margin: 0 auto;
+  text-align: left;
+}
+
+.library-create {
+  display: block;
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.library-breadcrumb {
+  margin-bottom: 0.75rem;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.library-breadcrumb button {
+  background: none;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  min-height: auto;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.library-groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.library-group-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 1rem 0.5rem;
+  background: var(--surface);
+  font-weight: 600;
+  text-align: center;
+}
+
+.library-group-count {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.library-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.library-action-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: var(--surface);
+  border-radius: var(--radius);
+}
+
+.library-action-open {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: left;
+  background: none;
+  border: none;
+  box-shadow: none;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.library-action-buttons {
+  flex: none;
+  display: flex;
+  gap: 0.4rem;
+}
+
 /* Couche de fond : le terrain remplit tout l'espace qui lui reste dans la
    colonne flex de `.editor`, une fois la barre Frames (`.frame-timeline`,
    taille naturelle) décomptée. `Field` (voir field/Field.tsx) se dimensionne

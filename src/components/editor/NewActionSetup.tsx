@@ -10,7 +10,7 @@ import {
   type RosterPreset,
 } from "../../domain/presets/roster";
 import { useActionEditorStore } from "../../state/actionEditorStore";
-import { saveActionToLibrary, setLastActiveActionId } from "../../state/libraryStore";
+import { saveActionToLibrary } from "../../state/libraryStore";
 import {
   EmptyRosterIcon,
   FullFieldIcon,
@@ -59,8 +59,13 @@ const ROSTER_LABEL_KEYS: Record<RosterPresetKey, string> = {
   horizontal: "editor.setup.rosterHorizontal",
 };
 
+interface NewActionSetupProps {
+  /** Retour à la Bibliothèque sans créer d'action (docs/PRD.md §4.10). */
+  onBack: () => void;
+}
+
 /** Écran de démarrage d'une nouvelle action : choix des presets terrain/effectif (Phase 3, retravaillé en tuiles Phase 9). */
-export function NewActionSetup() {
+export function NewActionSetup({ onBack }: NewActionSetupProps) {
   const { t } = useTranslation();
   const start = useActionEditorStore((s) => s.start);
   const loadAction = useActionEditorStore((s) => s.loadAction);
@@ -99,7 +104,6 @@ export function NewActionSetup() {
         return;
       }
       saveActionToLibrary(result.action);
-      setLastActiveActionId(result.action.id);
       loadAction(result.action);
     } catch {
       setImportError(t("editor.setup.importParseError"));
@@ -108,6 +112,9 @@ export function NewActionSetup() {
 
   return (
     <div className="setup-panel">
+      <button type="button" className="setup-back-link" onClick={onBack}>
+        {t("library.backToLibrary")}
+      </button>
       <h2>{t("editor.setup.title")}</h2>
 
       <label className="text-field">

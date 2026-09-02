@@ -3,11 +3,9 @@ import { buildAction } from "../domain/action";
 import type { FieldConfig, Frame } from "../domain/models";
 import {
   deleteActionFromLibrary,
-  getLastActiveActionId,
   listActionsFromLibrary,
   loadActionFromLibrary,
   saveActionToLibrary,
-  setLastActiveActionId,
 } from "./libraryStore";
 
 const fieldConfig: FieldConfig = { type: "half", lengthMeters: 30, widthMeters: 18 };
@@ -23,7 +21,6 @@ function makeAction(id: string) {
   return buildAction({
     id,
     name: `Action ${id}`,
-    tags: [],
     fieldConfig,
     defaultTransitionMs: 1200,
     frames: [rootFrame],
@@ -64,14 +61,6 @@ describe("libraryStore", () => {
     saveActionToLibrary(makeAction("a1"));
     deleteActionFromLibrary("a1");
     expect(loadActionFromLibrary("a1")).toBeUndefined();
-  });
-
-  it("tracks the last active action id", () => {
-    expect(getLastActiveActionId()).toBeNull();
-    setLastActiveActionId("a1");
-    expect(getLastActiveActionId()).toBe("a1");
-    setLastActiveActionId(null);
-    expect(getLastActiveActionId()).toBeNull();
   });
 
   it("survives corrupted JSON in the storage key", () => {

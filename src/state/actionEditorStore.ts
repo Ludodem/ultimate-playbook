@@ -13,7 +13,7 @@ import type {
 import { DEFAULT_TRANSITION_MS } from "../domain/playback";
 import { findFreeSpawnPosition } from "../domain/spawn";
 import { getChildren, getSubtreeIds } from "../domain/tree";
-import { saveActionToLibrary, setLastActiveActionId } from "./libraryStore";
+import { saveActionToLibrary } from "./libraryStore";
 
 /** Voir docs/DATA_MODEL.md §2 : seuil recommandé, pas une limite technique. */
 export const MAX_RECOMMENDED_PER_TEAM = 15;
@@ -33,7 +33,9 @@ interface ActionEditorState {
    * tant qu'aucune action n'est démarrée (écran de configuration affiché). */
   actionId: string | null;
   actionName: string;
-  tags: string[];
+  category: string;
+  system: string;
+  variant: string;
   defaultTransitionMs: number;
   createdAt: string | null;
   updatedAt: string | null;
@@ -58,6 +60,9 @@ interface ActionEditorState {
     name: string,
   ) => void;
   setActionName: (name: string) => void;
+  setCategory: (category: string) => void;
+  setSystem: (system: string) => void;
+  setVariant: (variant: string) => void;
   /** Charge une action existante (reprise au démarrage, ou import JSON). */
   loadAction: (action: Action) => void;
   /** Abandonne l'action en cours, revient à l'écran de configuration. */
@@ -144,7 +149,9 @@ function swapWithChild(frames: Frame[], parent: Frame, child: Frame): Frame[] {
 export const useActionEditorStore = create<ActionEditorState>((set, get) => ({
   actionId: null,
   actionName: "",
-  tags: [],
+  category: "",
+  system: "",
+  variant: "",
   defaultTransitionMs: DEFAULT_TRANSITION_MS,
   createdAt: null,
   updatedAt: null,
@@ -170,7 +177,9 @@ export const useActionEditorStore = create<ActionEditorState>((set, get) => ({
     set({
       actionId: crypto.randomUUID(),
       actionName: name,
-      tags: [],
+      category: "",
+      system: "",
+      variant: "",
       defaultTransitionMs: DEFAULT_TRANSITION_MS,
       createdAt: now,
       updatedAt: now,
@@ -184,13 +193,18 @@ export const useActionEditorStore = create<ActionEditorState>((set, get) => ({
   },
 
   setActionName: (name) => set({ actionName: name, updatedAt: new Date().toISOString() }),
+  setCategory: (category) => set({ category, updatedAt: new Date().toISOString() }),
+  setSystem: (system) => set({ system, updatedAt: new Date().toISOString() }),
+  setVariant: (variant) => set({ variant, updatedAt: new Date().toISOString() }),
 
   loadAction: (action) => {
     const root = action.frames.find((f) => f.parentId === null) ?? null;
     set({
       actionId: action.id,
       actionName: action.name,
-      tags: action.tags,
+      category: action.category ?? "",
+      system: action.system ?? "",
+      variant: action.variant ?? "",
       defaultTransitionMs: action.defaultTransitionMs,
       createdAt: action.createdAt,
       updatedAt: action.updatedAt,
@@ -204,11 +218,12 @@ export const useActionEditorStore = create<ActionEditorState>((set, get) => ({
   },
 
   resetToSetup: () => {
-    setLastActiveActionId(null);
     set({
       actionId: null,
       actionName: "",
-      tags: [],
+      category: "",
+      system: "",
+      variant: "",
       defaultTransitionMs: DEFAULT_TRANSITION_MS,
       createdAt: null,
       updatedAt: null,
@@ -413,7 +428,9 @@ useActionEditorStore.subscribe((state, prevState) => {
     state.frames === prevState.frames &&
     state.fieldConfig === prevState.fieldConfig &&
     state.actionName === prevState.actionName &&
-    state.tags === prevState.tags &&
+    state.category === prevState.category &&
+    state.system === prevState.system &&
+    state.variant === prevState.variant &&
     state.defaultTransitionMs === prevState.defaultTransitionMs
   ) {
     return;
@@ -422,7 +439,9 @@ useActionEditorStore.subscribe((state, prevState) => {
     buildAction({
       id: state.actionId,
       name: state.actionName,
-      tags: state.tags,
+      category: state.category.trim() || undefined,
+      system: state.system.trim() || undefined,
+      variant: state.variant.trim() || undefined,
       fieldConfig: state.fieldConfig,
       defaultTransitionMs: state.defaultTransitionMs,
       frames: state.frames,
@@ -430,5 +449,4 @@ useActionEditorStore.subscribe((state, prevState) => {
       updatedAt: state.updatedAt,
     }),
   );
-  setLastActiveActionId(state.actionId);
 });

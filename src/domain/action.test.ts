@@ -16,7 +16,7 @@ function validAction(): Action {
   return buildAction({
     id: "a1",
     name: "Sortie de ligne",
-    tags: ["strike"],
+    category: "Attaque",
     fieldConfig,
     defaultTransitionMs: 1200,
     frames: [rootFrame],

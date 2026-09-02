@@ -6,7 +6,9 @@ import type { Action, CurveControlPoint, Disc, Entity, FieldConfig, Frame, Team 
 export function buildAction(params: {
   id: string;
   name: string;
-  tags: string[];
+  category?: string;
+  system?: string;
+  variant?: string;
   fieldConfig: FieldConfig;
   defaultTransitionMs: number;
   frames: Frame[];
@@ -17,7 +19,9 @@ export function buildAction(params: {
     id: params.id,
     schemaVersion: 1,
     name: params.name,
-    tags: params.tags,
+    category: params.category,
+    system: params.system,
+    variant: params.variant,
     fieldConfig: params.fieldConfig,
     defaultTransitionMs: params.defaultTransitionMs,
     frames: params.frames,
@@ -113,8 +117,14 @@ export function validateAction(data: unknown): ActionValidationResult {
     return invalid('Version de schéma non prise en charge ("schemaVersion" doit être 1).');
   }
   if (!isString(data.name)) return invalid('Champ "name" manquant ou invalide.');
-  if (!Array.isArray(data.tags) || !data.tags.every(isString)) {
-    return invalid('Champ "tags" invalide (doit être une liste de textes).');
+  if (data.category !== undefined && !isString(data.category)) {
+    return invalid('Champ "category" invalide (doit être un texte).');
+  }
+  if (data.system !== undefined && !isString(data.system)) {
+    return invalid('Champ "system" invalide (doit être un texte).');
+  }
+  if (data.variant !== undefined && !isString(data.variant)) {
+    return invalid('Champ "variant" invalide (doit être un texte).');
   }
   if (!validateFieldConfig(data.fieldConfig)) {
     return invalid('Champ "fieldConfig" manquant ou invalide.');
@@ -143,7 +153,9 @@ export function validateAction(data: unknown): ActionValidationResult {
       id: data.id,
       schemaVersion: 1,
       name: data.name,
-      tags: data.tags,
+      category: data.category as string | undefined,
+      system: data.system as string | undefined,
+      variant: data.variant as string | undefined,
       fieldConfig: data.fieldConfig,
       defaultTransitionMs: data.defaultTransitionMs,
       frames,

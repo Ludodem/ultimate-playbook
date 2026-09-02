@@ -4,8 +4,6 @@
 import type { Action } from "../domain/models";
 
 const LIBRARY_KEY = "ultimate-playbook:actions";
-/** Id de la dernière action active, pour reprendre l'édition au rechargement. */
-const LAST_ACTION_KEY = "ultimate-playbook:last-action-id";
 
 type Library = Record<string, Action>;
 
@@ -42,16 +40,4 @@ export function deleteActionFromLibrary(id: string): void {
 
 export function listActionsFromLibrary(): Action[] {
   return Object.values(readLibrary());
-}
-
-export function getLastActiveActionId(): string | null {
-  return localStorage.getItem(LAST_ACTION_KEY);
-}
-
-export function setLastActiveActionId(id: string | null): void {
-  if (id) {
-    localStorage.setItem(LAST_ACTION_KEY, id);
-  } else {
-    localStorage.removeItem(LAST_ACTION_KEY);
-  }
 }

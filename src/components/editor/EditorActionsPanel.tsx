@@ -1,6 +1,9 @@
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { actionFileName, buildAction } from "../../domain/action";
+import { collectDistinctValues } from "../../domain/library";
 import { useActionEditorStore } from "../../state/actionEditorStore";
+import { listActionsFromLibrary } from "../../state/libraryStore";
 import { ENTITY_COLORS } from "../field/theme";
 import { PlayerPlusIcon } from "../icons/ActionIcons";
 import { FrameActionsMenu } from "./FrameActionsMenu";
@@ -29,7 +32,12 @@ export function EditorActionsPanel({
   const actionId = useActionEditorStore((s) => s.actionId);
   const actionName = useActionEditorStore((s) => s.actionName);
   const setActionName = useActionEditorStore((s) => s.setActionName);
-  const tags = useActionEditorStore((s) => s.tags);
+  const category = useActionEditorStore((s) => s.category);
+  const setCategory = useActionEditorStore((s) => s.setCategory);
+  const system = useActionEditorStore((s) => s.system);
+  const setSystem = useActionEditorStore((s) => s.setSystem);
+  const variant = useActionEditorStore((s) => s.variant);
+  const setVariant = useActionEditorStore((s) => s.setVariant);
   const defaultTransitionMs = useActionEditorStore((s) => s.defaultTransitionMs);
   const createdAt = useActionEditorStore((s) => s.createdAt);
   const updatedAt = useActionEditorStore((s) => s.updatedAt);
@@ -47,6 +55,18 @@ export function EditorActionsPanel({
   const orientation = useActionEditorStore((s) => s.orientation);
   const setOrientation = useActionEditorStore((s) => s.setOrientation);
 
+  // Suggestions (pas une liste fermée) pour les champs de classement, voir
+  // docs/PRD.md §4.10 — recalculées une fois par montage, une légère
+  // péremption est acceptable pour un simple confort de saisie.
+  const suggestions = useMemo(() => {
+    const libraryActions = listActionsFromLibrary();
+    return {
+      category: collectDistinctValues(libraryActions, "category"),
+      system: collectDistinctValues(libraryActions, "system"),
+      variant: collectDistinctValues(libraryActions, "variant"),
+    };
+  }, []);
+
   const frame = frames.find((f) => f.id === currentFrameId) ?? null;
   if (!fieldConfig || !frame || !actionId || !createdAt || !updatedAt) return null;
 
@@ -56,7 +76,9 @@ export function EditorActionsPanel({
     const action = buildAction({
       id: actionId,
       name: actionName,
-      tags,
+      category: category.trim() || undefined,
+      system: system.trim() || undefined,
+      variant: variant.trim() || undefined,
       fieldConfig,
       defaultTransitionMs,
       frames,
@@ -82,6 +104,50 @@ export function EditorActionsPanel({
         onChange={(e) => setActionName(e.target.value)}
         aria-label={t("editor.setup.name")}
       />
+
+      <span className="menu-section-label">{t("library.classification")}</span>
+      <label className="classification-field">
+        {t("library.category")}
+        <input
+          list="category-suggestions"
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+        />
+        <datalist id="category-suggestions">
+          {suggestions.category.map((value) => (
+            <option key={value} value={value} />
+          ))}
+        </datalist>
+      </label>
+      <label className="classification-field">
+        {t("library.system")}
+        <input
+          list="system-suggestions"
+          value={system}
+          onChange={(e) => setSystem(e.target.value)}
+        />
+        <datalist id="system-suggestions">
+          {suggestions.system.map((value) => (
+            <option key={value} value={value} />
+          ))}
+        </datalist>
+      </label>
+      <label className="classification-field">
+        {t("library.variant")}
+        <input
+          list="variant-suggestions"
+          value={variant}
+          onChange={(e) => setVariant(e.target.value)}
+        />
+        <datalist id="variant-suggestions">
+          {suggestions.variant.map((value) => (
+            <option key={value} value={value} />
+          ))}
+        </datalist>
+      </label>
+
+      <div className="menu-divider" />
+
       <div className="menu-group">
         <button type="button" onClick={handleExport}>
           {t("editor.toolbar.export")}
