@@ -68,8 +68,15 @@
     "delete": "Supprimer",
     "classification": "Classement",
     "category": "Catégorie",
+    "categoryOffense": "Attaque",
+    "categoryDefense": "Défense",
     "system": "Système",
-    "variant": "Variante"
+    "variant": "Variante",
+    "tagPickerPlaceholder": "Aucun(e)",
+    "tagPickerClear": "Aucun(e)",
+    "tagPickerCreate": "+ Créer « {{value}} »",
+    "tagPickerEmpty": "Aucun résultat",
+    "done": "Terminé"
   },
   "playback": {
     "mode": {

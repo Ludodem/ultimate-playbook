@@ -189,21 +189,130 @@ body {
   margin-bottom: 0.5rem;
 }
 
-.classification-field {
-  display: block;
-  margin: 0.5rem 0;
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  font-weight: 600;
+/* Bouton d'accès au classement depuis le menu secondaire (retour utilisateur
+   direct : les champs de classement prenaient trop de place dans le flux
+   d'édition principal pour un réglage édité une seule fois) — un seul bouton
+   compact plutôt que trois champs toujours visibles, voir
+   `ClassificationDialog.tsx`. */
+.classification-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 0.5rem;
+  text-align: left;
 }
 
-.classification-field input {
+.classification-summary {
+  color: var(--text-muted);
+  font-weight: 400;
+  font-size: 0.82rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Sur grand écran, `EditorActionsPanel` peut déjà être affiché dans un
+   `.menu-panel` flottant (écran étroit) ou en permanence dans la colonne
+   latérale (grand écran, jamais de `.menu-panel`/`.menu-scrim` dans ce cas) —
+   dans les deux cas, ce dialogue doit passer au-dessus de tout le reste. */
+.classification-scrim {
+  z-index: 52; /* au-dessus d'un éventuel .menu-panel (z-index 50) déjà ouvert */
+}
+
+.classification-dialog {
+  z-index: 55;
+}
+
+.classification-field-label {
+  display: block;
+  margin: 0.6rem 0 0.25rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.classification-done {
+  width: 100%;
+  margin-top: 0.75rem;
+}
+
+/* Sélecteur "à la Notion" (`TagPicker.tsx`) : un champ à choix unique mais
+   vocabulaire ouvert, cliquer ouvre une recherche + liste plutôt qu'un champ
+   texte brut avec un `<datalist>` natif peu lisible. */
+.tag-picker {
+  position: relative;
+}
+
+.tag-picker-trigger {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: var(--surface);
+}
+
+.tag-picker-placeholder {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.tag-picker-dropdown {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.tag-picker-search {
   display: block;
   width: 100%;
   min-height: 40px;
-  margin-top: 0.2rem;
-  font-weight: 400;
-  color: var(--text);
+  border: none;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.tag-picker-options {
+  max-height: 10rem;
+  overflow-y: auto;
+  padding: 0.3rem;
+}
+
+.tag-picker-option {
+  display: block;
+  width: 100%;
+  min-height: 38px;
+  text-align: left;
+  background: none;
+  border: none;
+  box-shadow: none;
+  font-weight: 500;
+}
+
+.tag-picker-option.is-selected {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.tag-picker-clear {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.tag-picker-create {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.tag-picker-empty {
+  padding: 0.5rem;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  text-align: center;
 }
 
 /* Écran Bibliothèque (Phase 10, docs/PRD.md §4.10). */
