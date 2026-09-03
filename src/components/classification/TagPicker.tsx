@@ -4,19 +4,29 @@ import { useTranslation } from "react-i18next";
 interface TagPickerProps {
   /** Valeur sélectionnée ("" = aucune) — un seul choix à la fois, voir docs/PRD.md §4.10. */
   value: string;
-  /** Valeurs déjà utilisées ailleurs dans la bibliothèque — pas une liste fermée. */
+  /** Valeurs déjà utilisées — pas une liste fermée. */
   suggestions: string[];
   onChange: (value: string) => void;
+  /** Retire une valeur des suggestions futures (croix sur chaque pastille). */
+  onRemoveSuggestion?: (value: string) => void;
   placeholder?: string;
 }
 
 /**
  * Sélecteur "à la Notion" pour un champ à choix unique mais vocabulaire
  * ouvert (système/variante du classement) : cliquer ouvre un menu déroulant
- * listant les valeurs déjà utilisées, avec un champ de recherche qui double
- * comme moyen d'en créer une nouvelle si elle n'existe pas encore.
+ * listant les valeurs déjà utilisées sous forme de pastilles, avec un champ
+ * de recherche qui double comme moyen d'en créer une nouvelle si elle
+ * n'existe pas encore, et une croix sur chaque pastille pour la retirer des
+ * suggestions futures.
  */
-export function TagPicker({ value, suggestions, onChange, placeholder }: TagPickerProps) {
+export function TagPicker({
+  value,
+  suggestions,
+  onChange,
+  onRemoveSuggestion,
+  placeholder,
+}: TagPickerProps) {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -86,15 +96,27 @@ export function TagPicker({ value, suggestions, onChange, placeholder }: TagPick
               </button>
             )}
             {filtered.map((option) => (
-              <button
-                key={option}
-                type="button"
-                className={`tag-picker-option${option === value ? " is-selected" : ""}`}
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => select(option)}
-              >
-                {option}
-              </button>
+              <div key={option} className="tag-picker-row">
+                <button
+                  type="button"
+                  className={`tag-picker-pill${option === value ? " is-selected" : ""}`}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => select(option)}
+                >
+                  {option}
+                </button>
+                {onRemoveSuggestion && (
+                  <button
+                    type="button"
+                    className="tag-picker-remove"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => onRemoveSuggestion(option)}
+                    aria-label={t("library.tagPickerRemove", { value: option })}
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
             ))}
             {canCreate && (
               <button

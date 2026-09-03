@@ -1,12 +1,27 @@
-import { useMemo } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { collectDistinctValues } from "../../domain/library";
 import { useActionEditorStore } from "../../state/actionEditorStore";
 import { listActionsFromLibrary } from "../../state/libraryStore";
+import {
+  listKnownTags,
+  registerTag,
+  removeKnownTag,
+  type TagField,
+} from "../../state/tagRegistryStore";
 import { TagPicker } from "./TagPicker";
 
 interface ClassificationDialogProps {
   onClose: () => void;
+}
+
+/** Union du registre persistant (voir `tagRegistryStore.ts`) et des valeurs
+ * actuellement utilisées dans la bibliothèque — au cas où une action
+ * importée porte une valeur jamais passée par le sélecteur. */
+function mergeSuggestions(field: TagField): string[] {
+  const fromLibrary = collectDistinctValues(listActionsFromLibrary(), field);
+  const fromRegistry = listKnownTags(field);
+  return [...new Set([...fromRegistry, ...fromLibrary])].sort((a, b) => a.localeCompare(b));
 }
 
 /**
@@ -15,8 +30,9 @@ interface ClassificationDialogProps {
  * utilisateur direct ("ça prend énormément de place pour un truc qui doit
  * être édité une seule fois") : un sous-dialogue dédié, ouvert depuis le menu
  * secondaire plutôt que des champs toujours visibles. La catégorie est un
- * choix fermé (Attaque/Défense, retour utilisateur explicite), système et
- * variante restent à vocabulaire libre via `TagPicker`.
+ * choix fermé (Attaque/Défense, retour utilisateur explicite — le sélecteur
+ * n'a pas besoin d'un libellé séparé, les deux boutons parlent d'eux-mêmes),
+ * système et variante restent à vocabulaire libre via `TagPicker`.
  */
 export function ClassificationDialog({ onClose }: ClassificationDialogProps) {
   const { t } = useTranslation();
@@ -27,15 +43,37 @@ export function ClassificationDialog({ onClose }: ClassificationDialogProps) {
   const variant = useActionEditorStore((s) => s.variant);
   const setVariant = useActionEditorStore((s) => s.setVariant);
 
-  // Suggestions (pas une liste fermée) — recalculées une fois par ouverture,
-  // une légère péremption est acceptable pour un simple confort de saisie.
-  const suggestions = useMemo(() => {
-    const libraryActions = listActionsFromLibrary();
-    return {
-      system: collectDistinctValues(libraryActions, "system"),
-      variant: collectDistinctValues(libraryActions, "variant"),
-    };
-  }, []);
+  const [systemSuggestions, setSystemSuggestions] = useState(() => mergeSuggestions("system"));
+  const [variantSuggestions, setVariantSuggestions] = useState(() => mergeSuggestions("variant"));
+
+  // Une valeur choisie/créée est enregistrée pour de bon (voir
+  // `tagRegistryStore.ts`) : la retirer de CETTE action plus tard ne doit pas
+  // la faire disparaître des suggestions futures, retour utilisateur direct.
+  const handleSystemChange = (next: string) => {
+    if (next) {
+      registerTag("system", next);
+      setSystemSuggestions(mergeSuggestions("system"));
+    }
+    setSystem(next);
+  };
+
+  const handleVariantChange = (next: string) => {
+    if (next) {
+      registerTag("variant", next);
+      setVariantSuggestions(mergeSuggestions("variant"));
+    }
+    setVariant(next);
+  };
+
+  const handleRemoveSystemSuggestion = (v: string) => {
+    removeKnownTag("system", v);
+    setSystemSuggestions(mergeSuggestions("system"));
+  };
+
+  const handleRemoveVariantSuggestion = (v: string) => {
+    removeKnownTag("variant", v);
+    setVariantSuggestions(mergeSuggestions("variant"));
+  };
 
   return (
     <>
@@ -43,7 +81,6 @@ export function ClassificationDialog({ onClose }: ClassificationDialogProps) {
       <div className="menu-panel classification-dialog">
         <span className="menu-section-label">{t("library.classification")}</span>
 
-        <span className="classification-field-label">{t("library.category")}</span>
         <div className="orientation-switch">
           <button
             type="button"
@@ -64,16 +101,18 @@ export function ClassificationDialog({ onClose }: ClassificationDialogProps) {
         <span className="classification-field-label">{t("library.system")}</span>
         <TagPicker
           value={system}
-          suggestions={suggestions.system}
-          onChange={setSystem}
+          suggestions={systemSuggestions}
+          onChange={handleSystemChange}
+          onRemoveSuggestion={handleRemoveSystemSuggestion}
           placeholder={t("library.tagPickerPlaceholder")}
         />
 
         <span className="classification-field-label">{t("library.variant")}</span>
         <TagPicker
           value={variant}
-          suggestions={suggestions.variant}
-          onChange={setVariant}
+          suggestions={variantSuggestions}
+          onChange={handleVariantChange}
+          onRemoveSuggestion={handleRemoveVariantSuggestion}
           placeholder={t("library.tagPickerPlaceholder")}
         />
 

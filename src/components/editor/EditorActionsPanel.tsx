@@ -97,7 +97,7 @@ export function EditorActionsPanel({
       >
         <span>{t("library.classification")}</span>
         <span className="classification-summary">
-          {[category, system, variant].filter(Boolean).join(" / ") || t("library.unclassified")}
+          {[category, system, variant].filter(Boolean).join(" / ") || t("library.noCategory")}
         </span>
       </button>
       {showClassification && <ClassificationDialog onClose={() => setShowClassification(false)} />}

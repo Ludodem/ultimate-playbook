@@ -291,12 +291,6 @@ body {
   font-weight: 500;
 }
 
-.tag-picker-option.is-selected {
-  background: var(--accent-soft);
-  color: var(--accent);
-  font-weight: 700;
-}
-
 .tag-picker-clear {
   color: var(--text-muted);
   font-style: italic;
@@ -305,6 +299,61 @@ body {
 .tag-picker-create {
   color: var(--accent);
   font-weight: 700;
+}
+
+/* Une suggestion existante = une pastille (retour utilisateur : "les tags
+   sous forme de pills"), avec une croix séparée à côté pour la retirer des
+   suggestions futures sans la sélectionner par erreur. */
+.tag-picker-row {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin: 2px 0;
+}
+
+.tag-picker-pill {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 34px;
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.85rem;
+  box-shadow: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tag-picker-pill.is-selected {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.tag-picker-remove {
+  flex: none;
+  width: 30px;
+  min-width: 30px;
+  height: 30px;
+  min-height: 30px;
+  padding: 0;
+  border-radius: 50%;
+  border: none;
+  background: none;
+  box-shadow: none;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.tag-picker-remove:hover {
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+  color: var(--danger);
 }
 
 .tag-picker-empty {

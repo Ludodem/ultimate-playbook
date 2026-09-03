@@ -66,8 +66,8 @@
     "empty": "Aucune action sauvegardée pour l'instant.",
     "duplicate": "Dupliquer",
     "delete": "Supprimer",
-    "classification": "Classement",
-    "category": "Catégorie",
+    "classification": "Catégorie",
+    "noCategory": "Aucune catégorie",
     "categoryOffense": "Attaque",
     "categoryDefense": "Défense",
     "system": "Système",
@@ -75,6 +75,7 @@
     "tagPickerPlaceholder": "Aucun(e)",
     "tagPickerClear": "Aucun(e)",
     "tagPickerCreate": "+ Créer « {{value}} »",
+    "tagPickerRemove": "Retirer « {{value}} » des suggestions",
     "tagPickerEmpty": "Aucun résultat",
     "done": "Terminé"
   },
